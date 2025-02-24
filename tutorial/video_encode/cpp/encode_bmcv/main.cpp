@@ -71,6 +71,18 @@ int picture_decode_encode(int dev_id, std::string filename) {
 void video_push_stream(cv::CommandLineParser parser) {
   std::string input_path = parser.get<std::string>("input_path");
   std::string output_path = parser.get<std::string>("output_path");
+  bool direct_forward = parser.get<bool>("direct_forward");
+  
+  // 如果是直接转发模式
+  if(direct_forward) {
+    char cmd[1024];
+    snprintf(cmd, sizeof(cmd), "ffmpeg -i %s -c copy -f rtsp %s", 
+             input_path.c_str(), output_path.c_str());
+    system(cmd);
+    return;
+  }
+
+  // 原有的编解码处理逻辑
   int dev_id = parser.get<int>("dev_id");
   bool compressed_nv12 = parser.get<bool>("compressed_nv12");
   int height = parser.get<int>("height");
@@ -131,6 +143,7 @@ int main(int argc, char* argv[]) {
       "{input_path     | ../datasets/test_car_person_1080P.mp4 | Path or rtsp "
       "url to the video/image file.}"
       "{output_path    |   output.mp4   | Local file path or stream url}"
+      "{direct_forward | false | Whether to use direct forward mode for rtsp streams}"
       "{dev_id         | 0    | Device id}"
       "{compressed_nv12| true | Whether the format of decoded output is "
       "compressed NV12.}"
