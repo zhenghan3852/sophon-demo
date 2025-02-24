@@ -1,0 +1,1 @@
+scp *.soc linaro@192.168.31.157:/home/linaro/test
