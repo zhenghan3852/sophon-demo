@@ -11,6 +11,7 @@
 #define USE_BMCV 1
 
 #include <stdio.h>
+#include <signal.h>
 
 #include <algorithm>
 #include <fstream>
@@ -22,6 +23,15 @@
 #include "opencv2/opencv.hpp"
 
 using namespace std;
+
+// 全局变量用于控制程序退出
+static bool g_running = true;
+
+// 信号处理函数
+static void signal_handler(int signum) {
+    printf("\nReceived signal %d, preparing to exit...\n", signum);
+    g_running = false;
+}
 
 // 检查文件名是否为图像文件
 bool is_image(const std::string& filename) {
@@ -76,7 +86,7 @@ void video_push_stream(cv::CommandLineParser parser) {
   // 如果是直接转发模式
   if(direct_forward) {
     char cmd[1024];
-    snprintf(cmd, sizeof(cmd), "ffmpeg -i %s -c copy -f rtsp %s", 
+    snprintf(cmd, sizeof(cmd), "ffmpeg -y -i %s -c copy -f rtsp %s", 
              input_path.c_str(), output_path.c_str());
     system(cmd);
     return;
@@ -115,24 +125,32 @@ void video_push_stream(cv::CommandLineParser parser) {
                         height, pix_fmt_, bitrate, dev_id);
 
   int count = 0;
-  while (true) {
+  while (g_running) {
     int got_frame = 0;
-
     got_frame = decoder.grabFrame(frame);
     count++;
-    sleep(0.01);
-
+    
     if (got_frame) {
       encoder.writeFrame(frame);
       printf("is encoding %d\n", count);
     } else {
-      printf("Video read fail!\n");
-      break;
+      // 对于rtsp流,got_frame为0不一定是结束
+      // 可以添加重试逻辑
+      printf("No frame received, retrying...\n");
+      usleep(100000); // 休眠100ms后重试
+      continue;
     }
     av_frame_unref(frame);
   }
+
+  // 正常关闭编码器
+  printf("Closing encoder...\n");
   encoder.closeEnc();
-  printf("encode finish! \n");
+  // 关闭解码器
+  decoder.closeDec();
+  // 释放frame
+  av_frame_free(&frame);
+  printf("Encode finished!\n");
 }
 
 int main(int argc, char* argv[]) {
@@ -175,6 +193,9 @@ int main(int argc, char* argv[]) {
     picture_decode_encode(dev_id, input_path);
 
   } else {
+    // 注册信号处理函数
+    signal(SIGINT, signal_handler);
+    signal(SIGTERM, signal_handler);
     video_push_stream(parser);
   }
 

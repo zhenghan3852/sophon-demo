@@ -1,0 +1,1 @@
+./encode_bmcv.soc --input_path=rtsp://admin:meituan666@192.168.31.64:554/stream1 --output_path=encode.mp4 --bitrate=8000000 --framerate=14
