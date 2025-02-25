@@ -135,4 +135,4 @@ Usage: encode_bmcv.pcie [params]
 # 使用直接转发方式(推荐)
 ./encode_bmcv.pcie --input_path=rtsp://127.0.0.1:8554/0 --output_path=rtsp://127.0.0.1:8554/1 --direct_forward=true
 ```
-测试开始后，会将接受的rtsp流转发到rtsp://127.0.0.1:8554/1。使用直接转发模式可以避免不必要的编解码操作,能显著降低资源占用和延迟。
+测试开始后，会将接受的rtsp流转发到rtsp://127.0.0.1:8554/1。
