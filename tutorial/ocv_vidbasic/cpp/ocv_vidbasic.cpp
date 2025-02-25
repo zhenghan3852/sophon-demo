@@ -98,6 +98,7 @@ int main(int argc, char* argv[])
     cout << "orig CAP_PROP_FPS: " << (int) cap.get(CAP_PROP_FPS) << endl;
 
     if (yuv_enable == 1){
+        cout << "set CAP_PROP_OUTPUT_YUV to true" << endl;
         cap.set(cv::CAP_PROP_OUTPUT_YUV, PROP_TRUE);
     }
 
@@ -162,36 +163,36 @@ int main(int argc, char* argv[])
         read_times = MAX_READ_TIMEOUT;
 
         // show live and wait for a key with timeout long enough to show images
-        if (dumpfile && yuv_enable)    // YUV420P
-        {
-#ifdef HAVE_BMCV
-            bmcv::downloadMat(image);
-#endif
-            for (int i = 0; i < image.avRows(); i++)
-            {
-                fwrite((char*)image.avAddr(0)+i*image.avStep(0),1,image.avCols(),dumpfile);
-            }
-            for (int i = 0; i < image.avRows()/2; i++)
-            {
-                fwrite((char*)image.avAddr(1)+i*image.avStep(1),1,image.avCols()/2,dumpfile);
-            }
-            for (int i = 0; i < image.avRows()/2; i++)
-            {
-                fwrite((char*)image.avAddr(2)+i*image.avStep(2),1,image.avCols()/2,dumpfile);
-            }
-        }
-        else if (dumpfile && image.channels() <= 3)        // BGR
-        {
-            for (int i = 0; i < image.rows; i++)
-            {
-                fwrite(image.data+i*image.step[0],1,image.cols*image.channels(),dumpfile);
-            }
-        }
+//         if (dumpfile && yuv_enable)    // YUV420P
+//         {
+// #ifdef HAVE_BMCV
+//             bmcv::downloadMat(image);
+// #endif
+//             for (int i = 0; i < image.avRows(); i++)
+//             {
+//                 fwrite((char*)image.avAddr(0)+i*image.avStep(0),1,image.avCols(),dumpfile);
+//             }
+//             for (int i = 0; i < image.avRows()/2; i++)
+//             {
+//                 fwrite((char*)image.avAddr(1)+i*image.avStep(1),1,image.avCols()/2,dumpfile);
+//             }
+//             for (int i = 0; i < image.avRows()/2; i++)
+//             {
+//                 fwrite((char*)image.avAddr(2)+i*image.avStep(2),1,image.avCols()/2,dumpfile);
+//             }
+//         }
+//         else if (dumpfile && image.channels() <= 3)        // BGR
+//         {
+//             for (int i = 0; i < image.rows; i++)
+//             {
+//                 fwrite(image.data+i*image.step[0],1,image.cols*image.channels(),dumpfile);
+//             }
+//         }
 
-        if (yuv_enable)
-            imwrite(argv[2] + to_string(i_frame_nums) + ".jpg", image);
-        else
-            imwrite(argv[2] + to_string(i_frame_nums) + ".png", image);
+//         if (yuv_enable)
+//             imwrite(argv[2] + to_string(i_frame_nums) + ".jpg", image);
+//         else
+//             imwrite(argv[2] + to_string(i_frame_nums) + ".png", image);
 
         if ((i_frame_nums+1) % 300 == 0)
         {
