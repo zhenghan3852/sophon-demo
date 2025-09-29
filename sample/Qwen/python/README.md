@@ -2,19 +2,21 @@
 
 ## 目录
 
-* [1. 环境准备](#1-环境准备)
-    * [1.1 x86/arm/riscv PCIe平台](#11-x86armriscv-pcie平台)
-    * [1.2 SoC平台](#12-soc平台)
-* [2. 推理测试](#2-推理测试)
-    * [2.1 参数说明](#21-参数说明)
-    * [2.2 使用方式](#22-使用方式)
-* [3. Web Demo](#3-Web-Demo)
-    * [3.1 参数说明](#31-使用方式)
-    * [3.2 程序流程图](#32-程序流程图)
-    * [3.3 使用方式](#33-使用方式)
-* [4. Openai API 接口服务](#4-Openai-API接口服务)
-    * [4.1 参数说明](#41-参数说明)
-    * [4.2 使用方式](#42-使用方式)
+- [Python例程](#python例程)
+  - [目录](#目录)
+  - [1. 环境准备](#1-环境准备)
+    - [1.1 x86/arm/riscv PCIe平台](#11-x86armriscv-pcie平台)
+    - [1.2 SoC平台](#12-soc平台)
+  - [2. 推理测试](#2-推理测试)
+    - [2.1 参数说明](#21-参数说明)
+    - [2.2 使用方式](#22-使用方式)
+  - [3. Web Demo](#3-web-demo)
+    - [3.1 参数说明](#31-参数说明)
+    - [3.2 程序流程图](#32-程序流程图)
+    - [3.3 使用方式](#33-使用方式)
+  - [4. Openai API接口服务](#4-openai-api接口服务)
+    - [4.1 参数说明](#41-参数说明)
+    - [4.2 使用方式](#42-使用方式)
 
 python目录下提供了一系列Python例程，具体情况如下：
 
@@ -44,15 +46,33 @@ cd driver_0714
 sudo dpkg -i *.deb
 ```
 
-您还需要安装sophon-sail，由于本例程需要的sophon-sail版本较新，相关功能还未发布，这里暂时提供一个可用的sophon-sail源码，x86/arm/riscv PCIe环境可以通过下面的命令下载：
+x86环境可以通过如下命令安装sophon-sail：
+```bash
+pip3 install dfss --upgrade
+python3 -m dfss --install sail
+```
+
+这里提供一个可用的sophon-sail源码，arm/riscv PCIe环境可以通过下面的命令下载：
 ```bash
 pip3 install dfss --upgrade #安装dfss依赖
 python3 -m dfss --url=open@sophgo.com:sophon-demo/Qwen/sophon-sail.tar.gz
 tar xvf sophon-sail.tar.gz
 ```
-参考[sophon-sail编译安装指南](https://doc.sophgo.com/sdk-docs/v24.04.01/docs_latest_release/docs/sophon-sail/docs/zh/html/1_build.html#)编译不包含bmcv,sophon-ffmpeg,sophon-opencv的可被Python3接口调用的Wheel文件。
+下载完成后，参考[sophon-sail编译安装指南](https://doc.sophgo.com/sdk-docs/v24.04.01/docs_latest_release/docs/sophon-sail/docs/zh/html/1_build.html#)编译不包含bmcv,sophon-ffmpeg,sophon-opencv的可被Python3接口调用的Wheel文件。
+
+如果在SC7-224T上运行多芯模型QwQ-32B，还需使用指定版本的libsophon，x86环境(ubuntu20)可以通过如下命令下载安装包
+```bash
+pip3 install dfss --upgrade
+python3 -m dfss --url=open@sophgo.com:sophon-demo/Qwen/qwq/sophon-libsophon_0.5.2_amd64.deb
+python3 -m dfss --url=open@sophgo.com:sophon-demo/Qwen/qwq/sophon-libsophon-dev_0.5.2_amd64.deb
+```
 
 ### 1.2 SoC平台
+
+>注意：
+在SOC模式下1684X芯片建议使用包括 v24.04.01 之后版本，1688芯片建议使用包括 V1.8.0 之后版本。
+1684X芯片SOC[刷机参考链接](https://doc.sophgo.com/sdk-docs/v24.04.01/docs_latest_release/docs/sophon-img/reference/html/1_BM1684X-software.html#id13). 1688芯片SOC[刷机参考链接](https://doc.sophgo.com/bm1688_sdk-docs/v1.8/docs_latest_release/docs/athena2-img/2_software_installation.html#id2)
+```
 
 如果您使用SoC平台（如SE、SM系列边缘设备），并使用它测试本例程，刷机后在`/opt/sophon/`下已经预装了相应的libsophon、sophon-opencv和sophon-ffmpeg运行库包。
 
@@ -60,11 +80,10 @@ tar xvf sophon-sail.tar.gz
 ```bash
 pip3 install -r python/requirements.txt
 ```
-由于本例程需要的sophon-sail版本较新，这里提供一个可用的sophon-sail whl包，SoC环境可以通过下面的命令下载：
+安装sophon-sail：
 ```bash
 pip3 install dfss --upgrade
-python3 -m dfss --url=open@sophgo.com:sophon-demo/Qwen/sophon_arm-3.8.0-py3-none-any.whl  #arm soc, py38
-python3 -m dfss --url=open@sophgo.com:/SILK/level-3/service_llm/sophon_arm-3.9.2-py3-none-any.whl #arm soc 1688, py38
+python3 -m dfss --install sail #自动按平台识别安装（和下方安装二选一即可）
 ```
 如果whl包无法使用，也可以参考上一小节，下载源码自己编译。
 ## 2. 推理测试
@@ -74,9 +93,11 @@ qwen.py使用config/qwen.yaml配置文件进行参数配置。
 
 qwen.yaml内容如下
 ```yaml
-bmodel_path: ../models/BM1684X/qwen1.5-7b_int4_seq512_1dev.bmodel   ## 用于推理的bmodel路径
-token_path: ./token_config    ## tokenizer目录路径；
-dev_ids: 0   ## 用于推理的tpu设备id；
+bmodel_path: ../models/BM1684X/qwen2.5-7b_int4_seq512_1dev.bmodel   ## 用于推理的bmodel路径
+token_path: ./token_config    ## tokenizer目录路径；如果跑别的模型，需要使用相应的tokenizer
+dev_ids: 0   ## 用于推理的tpu设备id
+enable_thinking: True      ## 是否开启思考，目前仅qwen3和deepseek-r1-distill-qwen支持开启思考模式
+generation_mode: greedy    ## 采样头，可选"greedy"贪心策略、"sample"采样策略
 ```
 
 ### 2.2 使用方式
@@ -85,9 +106,15 @@ dev_ids: 0   ## 用于推理的tpu设备id；
 cd python
 python3 qwen.py --config ./config/qwen.yaml
 ```
-在读入模型后会显示"Question:"，然后输入就可以了。模型的回答会出现在"Answer"中。结束对话请输入"exit"。
+在读入模型后会显示"Question:"，然后输入就可以了。模型的回答会出现在"Answer"中。结束对话请输入"exit"，清除历史消息请输入"clear"。
 
-如果要加载deepseek-r1-distill-qwen2模型，那么请将config参数修改为 ./config/deepseek-r1-distill-qwen2.yaml
+**注意：**
+>用户应根据需要自己选择或创建相应的配置文件，并正确填写配置文件中的参数(以下为特殊事例)。
+>1. 如果要加载deepseek-r1-distill-qwen2模型(BM1688)，./config/qwen.yaml 中 bmodel_path参数修改为 ../models/BM1688/deepseek-r1-distill-qwen-1.5b_int4_seq1024_1688_2core.bmodel，token_path 参数修改为 ../models/BM1688/tokenizer_deepseek_r1_distill_qwen2
+>2. 如果要加载deepseek-r1-distill-qwen2模型(BM1684X)，那么请将--config参数修改为 ./config/deepseek-r1-distill-qwen2.yaml
+>3. 若需要回答内容多样化，可将`generation_mode`设置为`sample`模式，并在`token_config/generation_config.json`文件中设置`repeat_last_n`、`temperature`、`top_p`、`top_k`、`repeat_penalty`等参数。
+>4. `sample`模式需要bmodel带有`sample_head`或者`penalty_sample_head`采样头，可以使用model_tool工具确认；若使用llm_convert工具转换模型，需要加上`--do_sample`参数以支持采样策略。
+>5. Web demo和api server也可以用同样的方法，在对应的`web.yaml`或`api.yaml`中设置采样策略。
 
 ## 3. Web Demo
 我们提供了基于[streamlit](https://streamlit.io/)的web demo。
@@ -96,10 +123,12 @@ web_demo.py使用config/web.yaml配置文件进行参数配置。
 
 web.yaml内容如下
 ```yaml
-title: qwen1.5-7b  ## 标题
-bmodel_path: ../models/BM1684X/qwen1.5-7b_int4_seq512_1dev.bmodel  ## 用于推理的bmodel路径；
-token_path: ./token_config   ## tokenizer目录路径；
-dev_ids: 0   ## 用于推理的tpu设备id；
+title: qwen2.5-7b  ## 标题
+bmodel_path: ../models/BM1684X/qwen2.5-7b_int4_seq512_1dev.bmodel  ## 用于推理的bmodel路径
+token_path: ./token_config   ## tokenizer目录路径
+dev_ids: 0   ## 用于推理的tpu设备id
+enable_thinking: True      ## 是否开启思考，目前仅qwen3和deepseek-r1-distill-qwen支持开启思考模式
+generation_mode: greedy    ## 采样头，可选"greedy"贪心策略、"sample"采样策略
 ```
 ### 3.2 程序流程图
 通过将同一个bmodel传入Qwen实例对象中，从而实现多会话同时推理的能力，具体流程如下：
@@ -118,6 +147,7 @@ pip3 install -r python/requirements.txt
 ```bash
 cd python
 python3 -m streamlit run web_demo.py -- --config=./config/web.yaml
+#在聊天框中输入clear可以清除历史对话记录
 ```
 
 首次运行需要输入邮箱，输入邮箱后命令行输出以下信息则表示启动成功
@@ -139,10 +169,12 @@ openai_api_server.py使用config/api.yaml配置文件进行参数配置。
 api.yaml内容如下
 ```yaml
 models:                 ## 模型列表
-  - name: qwen1.5      ## 模型名称，用于匹配模型
-    bmodel_path: ../models/BM1684X/qwen1.5-7b_int4_seq512_1dev.bmodel ## 用于推理的bmodel路径
+  - name: qwen2.5      ## 模型名称，用于匹配模型
+    bmodel_path: ../models/BM1684X/qwen2.5-7b_int4_seq512_1dev.bmodel ## 用于推理的bmodel路径
     token_path: ./token_config ## tokenizer目录路径
     dev_id: 0  ## 用于推理的tpu设备id
+    enable_thinking: True      ## 是否开启思考，目前仅qwen3和deepseek-r1-distill-qwen支持开启思考模式
+    generation_mode: greedy    ## 采样头，可选"greedy"贪心策略、"sample"采样策略
 
 port: 18080   ## 服务端口
 ```

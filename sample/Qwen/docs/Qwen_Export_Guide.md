@@ -12,7 +12,7 @@ Qwen模型导出需要依赖[Qwen官方仓库](https://huggingface.co/Qwen)。on
 
 ## 2. 主要步骤
 
-模型编译前需要安装TPU-MLIR。安装好后需在TPU-MLIR环境中进入例程目录。先导出onnx，然后使用TPU-MLIR将onnx模型编译为BModel。编译的具体方法可参考《TPU-MLIR快速入门手册》的“3. 编译ONNX模型”(请从[算能官网](https://developer.sophgo.com/site/index.html?categoryActive=material)相应版本的SDK中获取)。
+模型编译前需要安装TPU-MLIR。安装好后需在TPU-MLIR环境中进入例程目录。对于Qwen3,Qwen2无需导出onnx；对于其他模型，需要先导出onnx，然后使用TPU-MLIR将onnx模型编译为BModel。编译的具体方法可参考《TPU-MLIR快速入门手册》的“3. 编译ONNX模型”(请从[算能官网](https://developer.sophgo.com/site/index.html?categoryActive=material)相应版本的SDK中获取)。
 
 ### 2.1 TPU-MLIR环境搭建
 
@@ -66,16 +66,22 @@ source ./envsetup.sh
 **注：** 
 - Qwen1.5-1.8B官方库50G左右，在下载之前，要确认自己有huggingface官网的access token或者SSH key。
 - Qwen1.5-7B官方库50G左右，在下载之前，要确认自己有huggingface官网的access token或者SSH key。
-- Deepseek-R1-Distill-Qwen-1.5B官方库50G左右，在下载之前，要确认自己有huggingface官网的access token或者SSH key。
-- Deepseek-R1-Distill-Qwen-7B官方库50G左右，在下载之前，要确认自己有huggingface官网的access token或者SSH key。
+- Qwen2.5-1.5B官方库50G左右，在下载之前，要确认自己有huggingface官网的access token或者SSH key。
+- Qwen2.5-7B官方库50G左右，在下载之前，要确认自己有huggingface官网的access token或者SSH key。
+- Deepseek-R1-Distill-Qwen-1.5B官方库3.5G左右，在下载之前，要确认自己有huggingface官网的access token或者SSH key。
+- Deepseek-R1-Distill-Qwen-7B官方库15G左右，在下载之前，要确认自己有huggingface官网的access token或者SSH key。
+- Deepseek-R1-Distill-Qwen-14B官方库30G左右，在下载之前，要确认自己有huggingface官网的access token或者SSH key。
 
 
 ```bash
 git lfs install
 git clone https://huggingface.co/Qwen/Qwen1.5-7B-Chat
 git clone https://huggingface.co/Qwen/Qwen1.5-1.8B-Chat
+git clone https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct
+git clone https://huggingface.co/Qwen/Qwen2.5-7B-Instruct
 git clone https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B
 git clone https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-7B
+git clone https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-14B
 ```
 如果git clone完代码之后出现卡住，可以尝试`ctrl+c`中断，然后进入仓库运行`git lfs pull`。
 
@@ -160,6 +166,8 @@ Qwen2.5
 # bm1684x 单芯
 python3 tools/export_onnx_qwen2_5.py --model_path /workspace/Qwen2.5-7B-Instruct --seq_length 512 
 
+# bm1688 单芯
+python3 tools/export_onnx_qwen2_5.py --model_path /workspace/Qwen2.5-1.5B-Instruct --seq_length 512 --lmhead_with_topk 1
 ```
 
 Deepseek-R1-Distill-Qwen-1.5B(BM1688，[参考地址](https://github.com/sophgo/LLM-TPU_Lite/tree/main/models/DeepseekR1Distill))
@@ -214,6 +222,9 @@ Qwen2.5
 ```bash
 # bm1684x 单芯
 ./scripts/gen_bmodel.sh --target bm1684x --mode int4 --name qwen2.5-7b --seq_length 512 --addr_mode io_alone
+
+# bm1688 单芯
+./scripts/gen_bmodel_qwen2_1688.sh --name qwen2.5-1.5b --seq_length 512 --mode int4 --addr_mode io_alone
 ```
 
 Deepseek-R1-Distill-Qwen-1.5B (BM1688，[参考地址](https://github.com/sophgo/LLM-TPU_Lite/tree/main/models/DeepseekR1Distill))
@@ -232,3 +243,26 @@ python tools/model_export_BM1684X_DS_qwen.py --quantize w4bf16 --tpu_mlir_path /
 ```
 其中，tpu_mlir_path指定tpu-mlir地址，编译成功之后，BM1684X模型将会存放在torch_path指定目录下，该目录下还会存在onnx和bmodel两个中间文件夹可以删除。
 
+### 2.3.2 BM1684X编译QwQ-32B
+请参考[LLM-TPU Qwen2_5](https://github.com/sophgo/LLM-TPU/tree/main/models/Qwen2_5/compile)
+
+### 2.3.3 编译Qwen3
+Qwen3无需导出onnx，可以使用llm_convert工具直接转换bmodel，可以参考文档[编译LLM模型](https://github.com/sophgo/tpu-mlir/blob/master/docs/quick_start/source_zh/10_llm_convert.rst)。首先需要在Huggingface下载Qwen3
+```bash
+# 下载模型
+git lfs install
+git clone git@hf.co:Qwen/Qwen3-4B-AWQ
+# 如果是8B，则如下：
+git clone git@hf.co:Qwen/Qwen3-8B-AWQ
+```
+在docker内编译模型生成bmodel
+```bash
+# bm1684x平台下执行：
+llm_convert.py -m /workspace/Qwen3-4B -s 512 --quantize w4bf16 -g 128 -c bm1684x --out_dir qwen3_4b
+# bm1688平台下执行：
+llm_convert.py -m /workspace/Qwen3-4B -s 512 --quantize w4bf16 -g 128 -c bm1688 --out_dir qwen3_4b
+```
+
+> **注意**：
+> 1. Qwen2及之后的模型都可以使用此工具直接转换bmodel；
+> 2. 推荐下载AWQ量化版本的模型进行转换，可基本消除模型转换过程的精度损失。

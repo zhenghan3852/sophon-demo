@@ -18,10 +18,14 @@
 #include <utility>
 #include <filesystem>
 #include "bmruntime_interface.h"
+#include <Eigen/Core>
+#include <Eigen/Dense>
 
 class CLIP {
 public:
-    void init(const std::string& image_model, const std::string& text_model, const int &dev_id);
+    void init(const std::string& image_model, const std::string& text_model, const int &dev_id, 
+                const std::string text_projection_path,
+                std::string clip_type_name="open_clip");
     void deinit();
     std::vector<float> preprocess(const cv::Mat& image);
     std::vector<float> encode_image(const std::vector<float>& image);
@@ -30,6 +34,7 @@ public:
                                         const std::vector<std::vector<float>>& text_features);
     std::pair<std::vector<float>, std::vector<int>> topk(const std::vector<float>& x, int k);
 
+    size_t get_max_token_len() const;
     double encode_image_time;
     double encode_text_time;
     double preprocess_time;
@@ -37,6 +42,7 @@ public:
 
 private:
     cv::Mat preprocess_cpu_letterbox(const cv::Mat& image);
+    cv::Mat mobile_clip_preprocess(const cv::Mat& image);
     void letterbox(const cv::Mat& image, cv::Mat& outImage,
                 const cv::Size& newShape = cv::Size(224, 224),
                 const cv::Scalar& color = cv::Scalar(114, 114, 114),
@@ -59,7 +65,7 @@ private:
     bm_net_info_t* text_net;
     std::vector<float> mean;
     std::vector<float> std;
-    std::vector<std::vector<float>> text_projection;
+    Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic> text_projection;
     void *p_bmrt_image;
     void *p_bmrt_text;
     const char **image_name;
@@ -69,6 +75,7 @@ private:
     bm_shape_t* image_net_output_shape;
     bm_shape_t* text_net_output_shape;
     bm_shape_t* text_net_input_shape;
+    std::string clip_type;
 };
 
 #endif // CLIP_HPP

@@ -8,8 +8,8 @@
   - [3. 运行环境准备](#3-运行环境准备)
   - [4. 准备模型](#4-准备模型)
     - [4.1 使用提供的模型](#41-使用提供的模型)
-    - [4.2 自行导出ONNX模型](#42-自行导出ONNX模型)
-    - [4.3 自行编译BModel模型](#43-自行编译BModel模型)
+    - [4.2 自行导出ONNX模型](#42-自行导出onnx模型)
+    - [4.3 自行编译BModel模型](#43-自行编译bmodel模型)
   - [5. 例程测试](#5-例程测试)
   - [6. 程序性能测试](#6-程序性能测试)
 
@@ -34,22 +34,15 @@ Qwen2-VL是阿里云研发的大规模视觉语言模型（Large Vision Language
 ## 3. 运行环境准备
 
 在PCIe上无需修改内存，以下为soc模式相关：
-对于1684X系列设备（如SE7/SM7），都可以通过这种方式完成环境准备，使其满足Qwen2-VL运行条件。首先，确保使用V24.04.01刷机包，刷机包可由如下命令获取：
-
-```bash
-pip3 install dfss --upgrade
-python3 -m dfss --url=open@sophgo.com:sophon-sdk/release/v24.04.01/sophon-img/sdcard.tgz
-```
+对于1684X系列设备（如SE7/SM7），都可以通过这种方式完成环境准备，使其满足Qwen2-VL运行条件。首先，确保使用V24.04.01 SDK，可以通过bm_version命令检查SDK版本，如需要升级，可从sophgo.com获取v24.04.01版本SDK，刷机包位于sophon-img-xxx/sdcard.tgz中，参考对应的产品手册进行刷机。
 
 确保SDK版本后，在1684x SoC环境上，参考如下命令修改设备内存。
 
 ```bash
 cd /data/
 mkdir memedit && cd memedit
-wget -nd https://sophon-file.sophon.cn/sophon-prod-s3/drive/23/09/11/13/DeviceMemoryModificationKit.tgz
-tar xvf DeviceMemoryModificationKit.tgz
-cd DeviceMemoryModificationKit
-tar xvf memory_edit_{vx.x}.tar.xz #vx.x是版本号
+wget -nd https://github.com/sophgo/sophon-tools/releases/download/v24.09.21/memory_edit_v2.10.tar.xz
+tar xvf memory_edit_v2.10.tar.xz
 cd memory_edit
 ./memory_edit.sh -p #这个命令会打印当前的内存布局信息
 ./memory_edit.sh -c -npu 7615 -vpu 2048 -vpp 2048 #npu也可以访问vpu和vpp的内存
@@ -170,19 +163,19 @@ cd scripts
 
 ## 6. 程序性能测试
 
-输入`datasets/videos/carvana_video.mp4`测试视频，测试问题为："请描述视频中的内容"，测试命令如下
+输入`datasets/images/test_frames`测试图片集，原始图片尺寸为1920x1080，缩放到模型能够接受的最大尺寸进行测试，即`max_side`参数为-1，测试问题为："请描述图片中的内容"，测试命令如下
 
 ```bash
-python3 qwen2_vl.py --vision_inputs="[{\"type\":\"video\",\"video\":\"../datasets/videos/carvana_video.mp4\",\"resized_height\":420,\"resized_width\":630,\"nframes\":2}]"
+cd scripts
+python3 performance_test.py
 ```
 
-|    测试平台   |               测试模型                   |first token latency(s)|token per second(tokens/s)| 
-| -----------  | -------------------------------------- | --------------------- | ----------------------- | 
-|    SE7-32    | qwen2-vl-7b_int4_seq512_1dev.bmodel   |   3.55               |     9.67               | 
-|    SE7-32    | qwen2-vl-7b_int4_seq1536_1dev.bmodel   |   5.93               |     9.19               | 
+|    测试平台   |               测试模型                  |    preprocess + tokenize(s)     |   vision inference(s)  | first token latency(s)  |token per second(tokens/s)| 
+| -----------  | -------------------------------------- | -------------------------------- | ----------------------- | ---------------------- | ------------------------ |
+|    SE7-32    | qwen2-vl-7b_int4_seq1536_1dev.bmodel   |   0.252                          |     3.086               |      2.152             |       9.186              |
  
 > **测试说明**：  
-> 1. 性能测试结果具有一定的波动性，且与输入也有关，建议多次测试取平均值；
+> 1. 性能测试结果为多张图片的平均值，具有一定的波动性，且与输入也有关，建议多次测试取平均值；
 > 2. SE7-32的主控处理器为8核 ARM A53 42320 DMIPS @2.3GHz，PCIe上的性能由于处理器的不同可能存在较大差异；
 > 3. 图片或者视频尺寸越大，一般精度越高，直到达到一定尺寸，较大输入需要上下文较长的模型；
 

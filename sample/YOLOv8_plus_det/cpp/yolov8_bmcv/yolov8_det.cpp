@@ -28,7 +28,7 @@ int YoloV8_det::Detect(const std::vector<bm_image>& input_images, std::vector<Yo
     std::vector<bm_tensor_t> output_tensors;
     output_tensors.resize(netinfo->output_num);
     std::vector<std::pair<int, int>> txy_batch;
-    std::vector<float> ratios_batch;
+    std::vector<std::pair<float, float>> ratios_batch;
     m_ts->save("yolov8 preprocess", input_images.size());
     ret = pre_process(input_images, input_tensor, txy_batch, ratios_batch);
     assert(ret == 0);
@@ -63,7 +63,7 @@ float YoloV8_det::get_aspect_scaled_ratio(int src_w, int src_h, int dst_w, int d
 int YoloV8_det::pre_process(const std::vector<bm_image>& images, 
                             bm_tensor_t& input_tensor, 
                             std::vector<std::pair<int, int>>& txy_batch, 
-                            std::vector<float>& ratios_batch) {
+                            std::vector<std::pair<float, float>>& ratios_batch) {
     int ret = 0;
     std::vector<bm_image> m_resized_imgs;
     std::vector<bm_image> m_converto_imgs;
@@ -138,14 +138,14 @@ int YoloV8_det::pre_process(const std::vector<bm_image>& images,
             padding_attr.dst_crop_stx = tx1;
         }
         txy_batch.push_back(std::make_pair(tx1, ty1));
-        ratios_batch.push_back(ratio);
+        ratios_batch.push_back(std::make_pair(ratio, ratio));
         bmcv_rect_t crop_rect{0, 0, image1.width, image1.height};
         auto ret = bmcv_image_vpp_convert_padding(handle, 1, image_aligned, &m_resized_imgs[i],
                                                   &padding_attr, &crop_rect);
 #else
         auto ret = bmcv_image_vpp_convert(handle, 1, images[i], &m_resized_imgs[i]);
         txy_batch.push_back(std::make_pair(0, 0));
-        ratios_batch.push_back(1.0);
+        ratios_batch.push_back(std::make_pair((float)m_net_w/images[i].width,(float)m_net_h/images[i].height));
 #endif
         assert(BM_SUCCESS == ret);
         if (need_copy)
@@ -290,7 +290,7 @@ float* YoloV8_det::get_cpu_data(bm_tensor_t* tensor, float scale){
 int YoloV8_det::post_process(const std::vector<bm_image>& input_images, 
                              std::vector<bm_tensor_t>& output_tensors, 
                              const std::vector<std::pair<int, int>>& txy_batch, 
-                             const std::vector<float>& ratios_batch, 
+                             const std::vector<std::pair<float, float>>& ratios_batch,
                              std::vector<YoloV8BoxVec>& detected_boxes) {
     float* data_box = NULL;
     bm_tensor_t tensor_box;
@@ -307,26 +307,28 @@ int YoloV8_det::post_process(const std::vector<bm_image>& input_images,
         int frame_width = frame.width;
         int frame_height = frame.height;
 
-        int box_num = tensor_box.shape.dims[1];
-        int nout = tensor_box.shape.dims[2];
+        int box_num = is_output_transposed ? tensor_box.shape.dims[1] : tensor_box.shape.dims[2];
+        int nout = is_output_transposed ? tensor_box.shape.dims[2] : tensor_box.shape.dims[1];
         float* batch_data_box =  data_box + batch_idx * box_num * nout; //output_tensor: [bs, box_num, class_num + 5]
+        int offset = is_output_transposed ? 1 : box_num;
 
         // Candidates
         for (int i = 0; i < box_num; i++) {
-            int box_index = i * nout;
-            float* cls_conf = batch_data_box + box_index + 4; //output_tensor's last dim: [x, y, w, h, cls_conf0, ..., cls_conf14, rotate_angle]
+            int box_index = is_output_transposed ? i * nout : i;
+            //transposed output_tensor's last dim: [x, y, w, h, cls_conf0, ..., cls_conf14, rotate_angle]
+            float* cls_conf = batch_data_box + box_index + 4 * offset; 
 #if USE_MULTICLASS_NMS
             // multilabel
             for (int j = 0; j < m_class_num; j++) {
-                float cur_value = cls_conf[j];
+                float cur_value = cls_conf[j * offset];
                 if (cur_value > m_confThreshold) {
                     YoloV8Box box;
                     box.score = cur_value;
                     box.class_id = j;
                     float centerX = batch_data_box[box_index];
-                    float centerY = batch_data_box[box_index + 1];
-                    float width = batch_data_box[box_index + 2];
-                    float height = batch_data_box[box_index + 3];
+                    float centerY = batch_data_box[box_index + 1 * offset];
+                    float width = batch_data_box[box_index + 2 * offset];
+                    float height = batch_data_box[box_index + 3 * offset];
 
                     int c = agnostic ? 0 : box.class_id * max_wh;
                     box.x1 = centerX - width / 2 + c;
@@ -339,16 +341,31 @@ int YoloV8_det::post_process(const std::vector<bm_image>& input_images,
 #else
             // best class
             YoloV8Box box;
-            box.class_id = argmax(batch_data_box + box_index + 4, m_class_num);
-            box.score = batch_data_box[box_index + 4 + box.class_id];
+            if(is_output_transposed){
+                box.class_id = argmax(batch_data_box + box_index + 4, m_class_num);
+                box.score = batch_data_box[box_index + 4 + box.class_id];
+            }else {
+                float max_value = 0.0;
+                int max_index = 0;
+                for(int j = 0; j < m_class_num; j++){
+                    float cur_value = cls_conf[i + j * box_num];
+                    if(cur_value > max_value){
+                        max_value = cur_value;
+                        max_index = j;
+                    }
+                }
+                box.class_id = max_index;
+                box.score = max_value;
+            }
+
             if(box.score <= m_confThreshold){
                 continue;
             }
             int c = agnostic ? 0 : box.class_id * max_wh;
             float centerX = batch_data_box[box_index];
-            float centerY = batch_data_box[box_index + 1];
-            float width = batch_data_box[box_index + 2];
-            float height = batch_data_box[box_index + 3];
+            float centerY = batch_data_box[box_index + 1 * offset];
+            float width = batch_data_box[box_index + 2 * offset];
+            float height = batch_data_box[box_index + 3 * offset];
             box.x1 = centerX - width / 2 + c;
             box.y1 = centerY - height / 2 + c;
             box.x2 = box.x1 + width;
@@ -374,13 +391,15 @@ int YoloV8_det::post_process(const std::vector<bm_image>& input_images,
 
         int tx1 = txy_batch[batch_idx].first;
         int ty1 = txy_batch[batch_idx].second;
-        float ratio = ratios_batch[batch_idx];
-        float inv_ratio = 1.0 / ratio;
+        float ratio_x = ratios_batch[batch_idx].first;
+        float ratio_y = ratios_batch[batch_idx].second;
+        float inv_ratio_x = 1.0 / ratio_x;
+        float inv_ratio_y = 1.0 / ratio_y;
         for (int i = 0; i < yolobox_vec.size(); i++) {
-            yolobox_vec[i].x1 = std::round((yolobox_vec[i].x1 - tx1) * inv_ratio);
-            yolobox_vec[i].y1 = std::round((yolobox_vec[i].y1 - ty1) * inv_ratio);
-            yolobox_vec[i].x2 = std::round((yolobox_vec[i].x2 - tx1) * inv_ratio);
-            yolobox_vec[i].y2 = std::round((yolobox_vec[i].y2 - ty1) * inv_ratio);
+            yolobox_vec[i].x1 = std::round((yolobox_vec[i].x1 - tx1) * inv_ratio_x);
+            yolobox_vec[i].y1 = std::round((yolobox_vec[i].y1 - ty1) * inv_ratio_y);
+            yolobox_vec[i].x2 = std::round((yolobox_vec[i].x2 - tx1) * inv_ratio_x);
+            yolobox_vec[i].y2 = std::round((yolobox_vec[i].y2 - ty1) * inv_ratio_y);
         }
         clip_boxes(yolobox_vec, frame_width, frame_height);
         detected_boxes.push_back(yolobox_vec);
@@ -393,13 +412,6 @@ int YoloV8_det::post_process(const std::vector<bm_image>& input_images,
         }
 
         if(misc_info.pcie_soc_mode == 1){ // soc
-            if(output_tensors[i].dtype != BM_FLOAT32){
-                delete [] tensor_data;
-            } else {
-                int tensor_size = bm_mem_get_device_size(output_tensors[i].device_mem);
-                bm_status_t ret = bm_mem_unmap_device_mem(handle, tensor_data, tensor_size);
-                assert(BM_SUCCESS == ret);
-            }
             if(output_tensors[i].dtype != BM_FLOAT32){
                 delete [] tensor_data;
             } else {

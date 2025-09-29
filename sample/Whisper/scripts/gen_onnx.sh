@@ -42,7 +42,7 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-onnx_export_cmd="python ../tools/export_whisper/export_onnx.py --model $model --beam_size $beam_size --padding_size $padding_size --export_onnx"
+onnx_export_cmd="python ../tools/export_whisper/export_onnx.py --model_dir weights --model $model --beam_size $beam_size --padding_size $padding_size --export_onnx"
 
 echo "Generating onnx models ..."
 if [ "$use_kvcache" = true ]; then
@@ -55,7 +55,7 @@ echo "[Cmd] Running command: $onnx_export_cmd"
 eval "$onnx_export_cmd"
 
 if [ ! -d "../models/onnx" ]; then
-    mkdir "../models/onnx"
+    mkdir -p "../models/onnx"
     echo "[Cmd] mkdir ../models/onnx"
 fi
 

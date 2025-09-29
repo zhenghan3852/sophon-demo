@@ -13,24 +13,28 @@ SOPHON-DEMO提供的例子从易到难分为`tutorial`、`sample`、`application
 
 | tutorial                                                                 | 说明                                                                      |支持硬件                       |
 | ----------------------------------------------------                     | ------------------------------------------------------------              |--------------                |
-| [resize](./tutorial/resize/README.md)                                    | resize接口。针对图像做缩放操作                                               | BM1684/BM1684X/BM1688/CV186H |
-| [crop](./tutorial/crop/README.md)                                        | crop接口，从输入图片中抠出需要用的图片区域                                    | BM1684/BM1684X/BM1688/CV186H |
-| [crop_and_resize_padding](./tutorial/crop_and_resize_padding/README.md)  | 将图片指定位置指定大小部分图片抠出，缩放后填充到大图中，空余部分填充指定像素数值  | BM1684/BM1684X/BM1688/CV186H |
-| [ocv_jpgbasic](./tutorial/ocv_jpubasic/README.md)                        | 使用sophon-opencv硬件加速实现图片编解码                                      | BM1684/BM1684X/BM1688/CV186H |
-| [ocv_vidbasic](./tutorial/ocv_vidbasic/README.md)                        | 使用sophon-opencv硬件加速实现视频解码，并将视频记录为png或jpg格式              | BM1684/BM1684X/BM1688/CV186H |
+| [resize](./tutorial/resize/README.md)                                    | resize接口。针对图像做缩放操作                                               | BM1684/BM1684X/BM1688/CV186X |
+| [crop](./tutorial/crop/README.md)                                        | crop接口，从输入图片中抠出需要用的图片区域                                    | BM1684/BM1684X/BM1688/CV186X |
+| [crop_and_resize_padding](./tutorial/crop_and_resize_padding/README.md)  | 将图片指定位置指定大小部分图片抠出，缩放后填充到大图中，空余部分填充指定像素数值  | BM1684/BM1684X/BM1688/CV186X |
+| [ocv_jpgbasic](./tutorial/ocv_jpubasic/README.md)                        | 使用sophon-opencv硬件加速实现图片编解码                                      | BM1684/BM1684X/BM1688/CV186X |
+| [ocv_vidbasic](./tutorial/ocv_vidbasic/README.md)                        | 使用sophon-opencv硬件加速实现视频解码，并将视频记录为png或jpg格式              | BM1684/BM1684X/BM1688/CV186X |
 | [blend](./tutorial/blend/README.md)                                      | 融合拼接两张图                                                              | BM1688/CV186X                |
-| [stitch](./tutorial/stitch/README.md)                                    | 拼接两张图片                                                                | BM1684X/BM1688/CV186H        |
+| [stitch](./tutorial/stitch/README.md)                                    | 拼接两张图片                                                                | BM1684X/BM1688/CV186X        |
 | [avframe_ocv](./tutorial/avframe_ocv/README.md)                          | avframe到cv::mat的转换例程                                                  | BM1684/BM1684X               |
-| [ocv_avframe](./tutorial/ocv_avframe/README.md)                          | bgr mat到yuv420p avframe的转换例程                                          | BM1684/BM1684X/BM1688/CV186H |
+| [ocv_avframe](./tutorial/ocv_avframe/README.md)                          | bgr mat到yuv420p avframe的转换例程                                          | BM1684/BM1684X/BM1688/CV186X |
 | [bm1688_2core2task_yolov5](./tutorial/bm1688_2core2task_yolov5/README.md)| 使用bm1688的双核双任务推理部署的yolov5                                       | BM1688                       |
-| [mmap](./tutorial/mmap/README.md)                                        | mmap接口，映射TPU内存到CPU                                                  | BM1684X/BM1688/CV186H         |
-| [video_encode](./tutorial/video_encode/README.md)                        | 视频编码和推流                                                              | BM1684/BM1684X/BM1688/CV186H |
+| [mmap](./tutorial/mmap/README.md)                                        | mmap接口，映射TPU内存到CPU                                                  | BM1684X/BM1688/CV186X         |
+| [video_encode](./tutorial/video_encode/README.md)                        | 视频编码和推流                                                              | BM1684/BM1684X/BM1688/CV186X |
 | [yolov8_ffmpeg_encode](./tutorial/yolov8_ffmpeg_encode/README.md)        | 解码+推理+画框+视频编码和推流                                                 | BM1684X |
+| [DPU](./tutorial/DPU/README.md)                                          | 1688 DPU接口用例                                                             | BM1688/CV186X |
+| [DWA](./tutorial/DWA/README.md)                                          | 1688 DWA接口用例                                                             | BM1688/CV186X |
 
 | sample                                                        | 算法类别          | 编程语言    | BModel         |支持硬件                     |
 |---                                                            |---               |---         | ---            |---                            |
 | [LPRNet](./sample/LPRNet/README.md)                           | 车牌识别          | C++/Python | FP32/FP16/INT8 | BM1684/BM1684X/BM1688/CV186X |
 | [ResNet](./sample/ResNet/README.md)                           | 图像分类          | C++/Python | FP32/FP16/INT8 | BM1684/BM1684X/BM1688/CV186X |
+| [Recognize-Anything](./sample/Recogize-Anything/README.md)    | 图像分类          | Python     | FP32/FP16      | BM1684X                      |
+| [YOLOv8_plus_cls](./sample/YOLOv8_plus_cls/README.md)         | 图像分类          | C++/Python | FP32/FP16/INT8 | BM1684X/BM1688/CV186X        |
 | [RetinaFace](./sample/RetinaFace/README.md)                   | 人脸检测          | C++/Python | FP32/FP16/INT8 | BM1684/BM1684X/BM1688        |
 | [SCRFD](./sample/SCRFD/README.md)                             | 人脸检测          | C++/Python | FP32/FP16/INT8 | BM1684/BM1684X/BM1688/CV186X |
 | [segformer](./sample/segformer/README.md)                     | 语义分割          | C++/Python | FP32/FP16      | BM1684/BM1684X/BM1688/CV186X |
@@ -38,6 +42,8 @@ SOPHON-DEMO提供的例子从易到难分为`tutorial`、`sample`、`application
 | [SAM2](./sample/SAM2/README.md)                               | 语义分割          | Python     | FP32/FP16      | BM1688                       |
 | [yolact](./sample/yolact/README.md)                           | 实例分割          | C++/Python | FP32/FP16/INT8 | BM1684/BM1684X               |
 | [YOLOv8_plus_seg](./sample/YOLOv8_plus_seg/README.md)         | 实例分割          | C++/Python | FP32/FP16/INT8 | BM1684X/BM1688               |
+| [YOLOv8_plus_seg_fuse](./sample/YOLOv8_plus_seg_fuse/README.md)| 实例分割(TPU后处理) | C++/Python | INT8          | BM1684X/BM1688               |
+| [YOLOv9_seg](./sample/YOLOv8_plus_seg/README.md)              | 实例分割          | C++/Python | FP32/FP16/INT8 | BM1684X/BM1688               |
 | [PP-OCR](./sample/PP-OCR/README.md)                           | OCR              | C++/Python | FP32/FP16      | BM1684/BM1684X/BM1688/CV186X  |
 | [OpenPose](./sample/OpenPose/README.md)                       | 人体关键点检测    | C++/Python | FP32/FP16/INT8 | BM1684/BM1684X/BM1688        |
 | [YOLOv8_pose](./sample/YOLOv8_pose/README.md)                 | 人体关键点检测    | C++/Python | FP32/FP16/INT8 | BM1684/BM1684X/BM1688/CV186X |
@@ -52,14 +58,19 @@ SOPHON-DEMO提供的例子从易到难分为`tutorial`、`sample`、`application
 | [YOLOX](./sample/YOLOX/README.md)                             | 目标检测          | C++/Python | FP32/INT8      | BM1684/BM1684X/BM1688/CV186X |
 | [SSD](./sample/SSD/README.md)                                 | 目标检测          | C++/Python | FP32/INT8      | BM1684/BM1684X               |
 | [YOLOv7](./sample/YOLOv7/README.md)                           | 目标检测          | C++/Python | FP32/FP16/INT8 | BM1684/BM1684X/BM1688/CV186X |
-| [YOLOv8_plus_det](./sample/YOLOv8_plus_det/README.md)         | 目标检测          | C++/Python | FP32/FP16/INT8 | BM1684/BM1684X/BM1688/CV186X |
+| [YOLOv8_det](./sample/YOLOv8_plus_det/README.md)              | 目标检测          | C++/Python | FP32/FP16/INT8 | BM1684/BM1684X/BM1688/CV186X |
+| [YOLOv9_det](./sample/YOLOv8_plus_det/README.md)              | 目标检测          | C++/Python | FP32/FP16/INT8 | BM1684/BM1684X/BM1688/CV186X |
+| [YOLOv11_det](./sample/YOLOv8_plus_det/README.md)             | 目标检测          | C++/Python | FP32/FP16/INT8 | BM1684X/BM1688/CV186X |
+| [YOLOv12_det](./sample/YOLOv8_plus_det/README.md)             | 目标检测          | C++/Python | FP32/FP16/INT8 | BM1684X/BM1688/CV186X |
 | [YOLOv5_opt](./sample/YOLOv5_opt/README.md)                   | 目标检测          | C++/Python | FP32/FP16/INT8 | BM1684X                      |
 | [YOLOv5_fuse](./sample/YOLOv5_fuse/README.md)                 | 目标检测          | C++/Python | FP32/FP16/INT8 | BM1684X/BM1688/CV186X        |
 | [YOLOv10](./sample/YOLOv10/README.md)                         | 目标检测          | C++/Python | FP32/FP16/INT8 | BM1684X/BM1688/CV186X        |
 | [ppYOLOv3](./sample/ppYOLOv3/README.md)                       | 目标检测          | C++/Python | FP32/FP16/INT8 | BM1684/BM1684X/BM1688/CV186X |
 | [ppYoloe](./sample/ppYoloe/README.md)                         | 目标检测          | C++/Python | FP32/FP16      | BM1684/BM1684X/BM1688/CV186X |
 | [YOLO_world](./sample/YOLO_world/README.md)                   | 目标检测          | Python     | FP32/FP16/INT8 | BM1684X/BM1688/CV186X        |
-| [YOLOv8_obb](./sample/YOLOv8_obb/README.md)                   | 旋转框目标检测     | C++/Python | FP32/FP16      | BM1684X/BM1688/CV186X       |
+| [D-FINE](./sample/D-FINE/README.md)                           | 目标检测          | Python     | FP16           | BM1684X/BM1688/CV186X        |
+| [YOLOv8_obb](./sample/YOLOv8_plus_obb/README.md)              | 旋转框目标检测     | C++/Python | FP32/FP16      | BM1684X/BM1688/CV186X       |
+| [YOLOv11_obb](./sample/YOLOv8_plus_obb/README.md)              | 旋转框目标检测     | C++/Python | FP32/FP16      | BM1684X/BM1688/CV186X       |
 | [WeNet](./sample/WeNet/README.md)                             | 语音识别          | C++/Python | FP32/FP16      | BM1684/BM1684X/BM1688/CV186X |
 | [Whisper](./sample/Whisper/README.md)                         | 语音识别          | Python     | FP16           | BM1684X                      |
 | [Seamless](./sample/Seamless/README.md)                       | 语音识别          | Python     | FP32/FP16      | BM1684X/BM1688               |
@@ -67,20 +78,27 @@ SOPHON-DEMO提供的例子从易到难分为`tutorial`、`sample`、`application
 | [ChatGLM2](./sample/ChatGLM2/README.md)                       | 大规模语言模型     | C++/Python | FP16/INT8/INT4 | BM1684X                     |
 | [Llama2](./sample/Llama2/README.md)                           | 大规模语言模型     | C++/Python | FP16/INT8/INT4 | BM1684X                     |
 | [ChatGLM3](./sample/ChatGLM3/README.md)                       | 大规模语言模型     | Python     | FP16/INT8/INT4 | BM1684X/BM1688              |
-| [Qwen](./sample/Qwen/README.md)                               | 大规模语言模型     | Python     | FP16/INT8/INT4 | BM1684X/BM1688/CV186X       |
+| [Qwen](./sample/Qwen/README.md)                               | 大规模语言模型     | C++/Python | FP16/INT8/INT4 | BM1684X/BM1688/CV186X       |
 | [MiniCPM](./sample/MiniCPM/README.md)                         | 大规模语言模型     | C++        | INT8/INT4      | BM1684X/BM1688/CV186X       |
 | [Baichuan2](./sample/Baichuan2/README.md)                     | 大规模语言模型     | Python     | INT8/INT4      | BM1684X                     |
 | [ChatGLM4](./sample/ChatGLM4/README.md)                       | 大规模语言模型     | Python     | INT8/INT4      | BM1684X                     |
 | [MiniCPM3](./sample/MiniCPM3/README.md)                       | 大规模语言模型     | Python     | INT8/INT4      | BM1684X                     |
+| [DeepSeek](./sample/DeepSeek/README.md)                       | 大规模语言模型     | Python     | INT4           | BM1684X/BM1688               |
+| [Janus](./sample/Janus/README.md)                             | 大规模语言模型     | Python     | INT4           | BM1684X/BM1688               |
+| [MiniCPM4](./sample/MiniCPM4/README.md)                       | 大规模语言模型     | C++/Python | INT4           | BM1684X/BM1688/CV186X       |
 | [StableDiffusionV1.5](./sample/StableDiffusionV1_5/README.md) | 图像生成          | Python     | FP32/FP16      | BM1684X                      |
 | [StableDiffusionXL](./sample/StableDiffusionXL/README.md)     | 图像生成          | Python     | FP32/FP16      | BM1684X                      |
 | [FLUX.1](./sample/FLUX.1/README.md)                           | 图像生成          | Python     | FP32/INT4      | BM1684X                      |
 | [GroundingDINO](./sample/GroundingDINO/README.md)             | 多模态目标检测     | Python     | FP16           | BM1684X/BM1688/CV186X       |
 | [Qwen-VL-Chat](./sample/Qwen-VL-Chat/README.md)               | 大规模视觉语言模型 | Python     | FP16/INT8      | BM1684X                     |
 | [Qwen2-VL](./sample/Qwen2-VL/README.md)                       | 大规模视觉语言模型 | Python     | INT4            | BM1684X                     |
+| [Qwen2.5-VL](./sample/Qwen2_5-VL/README.md)                   | 大规模视觉语言模型 | Python     | INT4            | BM1684X/BM1688             |
 | [InternVL2](./sample/InternVL2/README.md)                     | 大规模视觉语言模型 | Python     | INT4           | BM1684X/BM1688              |
+| [InternVL3](./sample/InternVL3/README.md)                     | 大规模视觉语言模型 | Python     | INT4           | BM1684X/BM1688              |
 | [Vila](./sample/Vila/README.md)                               | 大规模视觉语言模型 | Python     | INT8/INT4      | BM1684X/BM1688              |
 | [Llama3_2_Vision](./sample/Llama3_2_Vision/README.md)         | 大规模视觉语言模型 | Python     | INT8/INT4      | BM1684X                     |
+| [Phi4mm](./sample/Phi4mm/README.md)                           | 多模态大语言模型   | Python     | INT4           | BM1684X                     |
+| [VITA1_5](./sample/VITA1_5/README.md)                         | 多模态大语言模型   | Python     | INT4           | BM1684X                     |
 | [Real-ESRGAN](./sample/Real-ESRGAN/README.md)                 | 超分辨            | C++/Python | FP32/FP16/INT8 | BM1684X/BM1688/CV186X        |
 | [P2PNet](./sample/P2PNet/README.md)                           | 人群计数          | C++/Python | FP32/FP16/INT8 | BM1684/BM1684X/BM1688/CV186X |
 | [CLIP](./sample/CLIP/README.md)                               | 图文匹配          | C++/Python | FP16           | BM1684X/BM1688/CV186X        |
@@ -109,6 +127,12 @@ SOPHON-DEMO提供的例子从易到难分为`tutorial`、`sample`、`application
 ## 版本说明
 | 版本    | 说明 | 
 |---     |---   |
+| 0.3.4  | 完善和修复文档、代码问题，CLIP例程支持mobileclip，Qwen2.5-VL例程新增sample_head、动态模型支持，SuperGlue例程支持int8模型，GroundingDINO模型性能优化。|
+| 0.3.3  | 完善和修复文档、代码问题，sample模块新增D-FINE、VITA1_5、MiniCPM4。|
+| 0.3.2  | 完善和修复文档、代码问题，Qwen例程添加深度思考开关、penalty_sample，sample模块新增InternVL3，tutorial模块新增DWA接口用例。|
+| 0.3.1  | 完善和修复文档、代码问题，Qwen例程支持Qwen3，Qwen2.5-VL支持AWQ量化模型和penalty_sample head，sample模块新增YOLOv11_obb、Phi4mm，tutorial模块新增DPU接口用例。|
+| 0.3.0  | 完善和修复文档、代码问题，Qwen例程支持QwQ32B，sample模块新增Recognize-Anything、YOLOv8_plus_cls，Real-ESRGAN后处理优化，Qwen2.5-VL前处理优化，YOLOv8_plus_det支持输出未转置模型。|
+| 0.2.10  | 完善和修复文档、代码问题，Qwen例程支持C++，sample模块新增YOLOv12_det、YOLOv8_plus_seg_fuse、Janus、Qwen2.5-VL。tutorial模块新增yolov8_ffmpeg_encode。|
 | 0.2.9  | 完善和修复文档、代码问题，**Qwen例程支持deepseek-r1-distill-qwen2-1.5b、deepseek-r1-distill-qwen2-7b**，sample模块新增Llama3_2_Vision，新增YOLOv8_plus_det代替YOLOv8_det、YOLOv9_det、YOLOv11_det，新增YOLOv8_plus_seg代替YOLOv8_seg、YOLOv9_seg。|
 | 0.2.8  | 完善和修复文档、代码问题，sample模块新增MiniCPM3、LightStereo、Qwen2-VL、YOLO-world例程。|
 | 0.2.7  | 完善和修复文档、代码问题，sample模块新增CAM++、ChatTTS、FaceFormer、MP_SENet、Vila例程。application模块新增ChatDoc、LLM_api_server、Audio_assistant例程。|
@@ -132,34 +156,46 @@ SOPHON-DEMO提供的例子从易到难分为`tutorial`、`sample`、`application
 | 0.1.0	 | 提供LPRNet等10个例程，适配BM1684X(x86 PCIe、SoC)，BM1684(x86 PCIe、SoC) |
 
 ## 环境依赖
-SOPHON-DEMO主要依赖TPU-MLIR、TPU-NNTC、LIBSOPHON、SOPHON-FFMPEG、SOPHON-OPENCV、SOPHON-SAIL，对于BM1684/BM1684X SOPHONSDK，其版本要求如下：
-|SOPHON-DEMO|TPU-MLIR  |TPU-NNTC |LIBSOPHON|SOPHON-FFMPEG|SOPHON-OPENCV|SOPHON-SAIL| SOPHONSDK   |
-|-------- |------------| --------|---------|---------    |----------   | ------    | --------  |
-| 0.2.9  | >=1.15      | >=3.1.7 | >=0.5.0 | >=0.7.3     | >=0.7.3     | >=3.8.0   | >=v24.04.01|
-| 0.2.8  | >=1.9       | >=3.1.7 | >=0.5.0 | >=0.7.3     | >=0.7.3     | >=3.8.0   | >=v24.04.01|
-| 0.2.7  | >=1.9       | >=3.1.7 | >=0.5.0 | >=0.7.3     | >=0.7.3     | >=3.8.0   | >=v24.04.01|
-| 0.2.6  | >=1.9       | >=3.1.7 | >=0.5.0 | >=0.7.3     | >=0.7.3     | >=3.8.0   | >=v24.04.01|
-| 0.2.5  | >=1.9       | >=3.1.7 | >=0.5.0 | >=0.7.3     | >=0.7.3     | >=3.7.0   | >=v24.04.01|
-| 0.2.4  | >=1.9       | >=3.1.7 | >=0.5.0 | >=0.7.3     | >=0.7.3     | >=3.7.0   | >=v24.04.01|
-| 0.2.3  | >=1.8       | >=3.1.7 | >=0.5.0 | >=0.7.3     | >=0.7.3     | >=3.7.0   | >=v24.04.01|
-| 0.2.2  | >=1.8       | >=3.1.7 | >=0.5.0 | >=0.7.3     | >=0.7.3     | >=3.7.0   | >=v23.10.01|
-| 0.2.1  | >=1.7       | >=3.1.7 | >=0.5.0 | >=0.7.3     | >=0.7.3     | >=3.7.0   | >=v23.10.01|
-| 0.2.0  | >=1.6       | >=3.1.7 | >=0.5.0 | >=0.7.3     | >=0.7.3     | >=3.7.0   | >=v23.10.01|
-| 0.1.10 | >=1.2.2     | >=3.1.7 | >=0.4.6 | >=0.6.0     | >=0.6.0     | >=3.7.0   | >=v23.07.01|
-| 0.1.9  | >=1.2.2     | >=3.1.7 | >=0.4.6 | >=0.6.0     | >=0.6.0     | >=3.7.0   | >=v23.07.01|
-| 0.1.8  | >=1.2.2     | >=3.1.7 | >=0.4.6 | >=0.6.0     | >=0.6.0     | >=3.6.0   | >=v23.07.01|
-| 0.1.7  | >=1.2.2     | >=3.1.7 | >=0.4.6 | >=0.6.0     | >=0.6.0     | >=3.6.0   | >=v23.07.01|
-| 0.1.6  | >=0.9.9     | >=3.1.7 | >=0.4.6 | >=0.6.0     | >=0.6.0     | >=3.4.0   | >=v23.05.01|
-| 0.1.5  | >=0.9.9     | >=3.1.7 | >=0.4.6 | >=0.6.0     | >=0.6.0     | >=3.4.0   | >=v23.03.01|
-| 0.1.4  | >=0.7.1     | >=3.1.5 | >=0.4.4 | >=0.5.1     | >=0.5.1     | >=3.3.0   | >=v22.12.01|
-| 0.1.3  | >=0.7.1     | >=3.1.5 | >=0.4.4 | >=0.5.1     | >=0.5.1     | >=3.3.0   |    -      |
-| 0.1.2  | Not support | >=3.1.4 | >=0.4.3 | >=0.5.0     | >=0.5.0     | >=3.2.0   |    -      |
-| 0.1.1  | Not support | >=3.1.3 | >=0.4.2 | >=0.4.0     | >=0.4.0     | >=3.1.0   |    -      |
-| 0.1.0  | Not support | >=3.1.3 | >=0.3.0 | >=0.2.4     | >=0.2.4     | >=3.1.0   |    -      |
+SOPHON-DEMO主要依赖TPU-MLIR、LIBSOPHON、SOPHON-FFMPEG、SOPHON-OPENCV、SOPHON-SAIL，对于BM1684/BM1684X SOPHONSDK，其版本要求如下：
+|SOPHON-DEMO|TPU-MLIR  |LIBSOPHON|SOPHON-FFMPEG|SOPHON-OPENCV|SOPHON-SAIL| SOPHONSDK   |
+|-------- |------------|---------|---------    |----------   | ------    | --------  |
+| 0.3.4  | >=1.15      | >=0.5.0 | >=0.7.3     | >=0.7.3     | >=3.8.0   | >=v24.04.01|
+| 0.3.3  | >=1.15      | >=0.5.0 | >=0.7.3     | >=0.7.3     | >=3.8.0   | >=v24.04.01|
+| 0.3.2  | >=1.15      | >=0.5.0 | >=0.7.3     | >=0.7.3     | >=3.8.0   | >=v24.04.01|
+| 0.3.1  | >=1.15      | >=0.5.0 | >=0.7.3     | >=0.7.3     | >=3.8.0   | >=v24.04.01|
+| 0.3.0  | >=1.15      | >=0.5.0 | >=0.7.3     | >=0.7.3     | >=3.8.0   | >=v24.04.01|
+| 0.2.10 | >=1.15      | >=0.5.0 | >=0.7.3     | >=0.7.3     | >=3.8.0   | >=v24.04.01|
+| 0.2.9  | >=1.15      | >=0.5.0 | >=0.7.3     | >=0.7.3     | >=3.8.0   | >=v24.04.01|
+| 0.2.8  | >=1.9       | >=0.5.0 | >=0.7.3     | >=0.7.3     | >=3.8.0   | >=v24.04.01|
+| 0.2.7  | >=1.9       | >=0.5.0 | >=0.7.3     | >=0.7.3     | >=3.8.0   | >=v24.04.01|
+| 0.2.6  | >=1.9       | >=0.5.0 | >=0.7.3     | >=0.7.3     | >=3.8.0   | >=v24.04.01|
+| 0.2.5  | >=1.9       | >=0.5.0 | >=0.7.3     | >=0.7.3     | >=3.7.0   | >=v24.04.01|
+| 0.2.4  | >=1.9       | >=0.5.0 | >=0.7.3     | >=0.7.3     | >=3.7.0   | >=v24.04.01|
+| 0.2.3  | >=1.8       | >=0.5.0 | >=0.7.3     | >=0.7.3     | >=3.7.0   | >=v24.04.01|
+| 0.2.2  | >=1.8       | >=0.5.0 | >=0.7.3     | >=0.7.3     | >=3.7.0   | >=v23.10.01|
+| 0.2.1  | >=1.7       | >=0.5.0 | >=0.7.3     | >=0.7.3     | >=3.7.0   | >=v23.10.01|
+| 0.2.0  | >=1.6       | >=0.5.0 | >=0.7.3     | >=0.7.3     | >=3.7.0   | >=v23.10.01|
+| 0.1.10 | >=1.2.2     | >=0.4.6 | >=0.6.0     | >=0.6.0     | >=3.7.0   | >=v23.07.01|
+| 0.1.9  | >=1.2.2     | >=0.4.6 | >=0.6.0     | >=0.6.0     | >=3.7.0   | >=v23.07.01|
+| 0.1.8  | >=1.2.2     | >=0.4.6 | >=0.6.0     | >=0.6.0     | >=3.6.0   | >=v23.07.01|
+| 0.1.7  | >=1.2.2     | >=0.4.6 | >=0.6.0     | >=0.6.0     | >=3.6.0   | >=v23.07.01|
+| 0.1.6  | >=0.9.9     | >=0.4.6 | >=0.6.0     | >=0.6.0     | >=3.4.0   | >=v23.05.01|
+| 0.1.5  | >=0.9.9     | >=0.4.6 | >=0.6.0     | >=0.6.0     | >=3.4.0   | >=v23.03.01|
+| 0.1.4  | >=0.7.1     | >=0.4.4 | >=0.5.1     | >=0.5.1     | >=3.3.0   | >=v22.12.01|
+| 0.1.3  | >=0.7.1     | >=0.4.4 | >=0.5.1     | >=0.5.1     | >=3.3.0   |    -      |
+| 0.1.2  | Not support | >=0.4.3 | >=0.5.0     | >=0.5.0     | >=3.2.0   |    -      |
+| 0.1.1  | Not support | >=0.4.2 | >=0.4.0     | >=0.4.0     | >=3.1.0   |    -      |
+| 0.1.0  | Not support | >=0.3.0 | >=0.2.4     | >=0.2.4     | >=3.1.0   |    -      |
 
 对于BM1688/CV186AH SOPHONSDK，其版本要求如下：
 |SOPHON-DEMO|TPU-MLIR  |LIBSOPHON|SOPHON-FFMPEG|SOPHON-OPENCV|SOPHON-SAIL| SOPHONSDK   |
 |-------- |------------|---------|---------    |----------   | ------    | --------  |
+| 0.3.4  | >=1.15      | >=0.4.9 | >=1.7.0     | >=1.7.0     | >=3.8.0   | >=v1.7.0  |
+| 0.3.3  | >=1.15      | >=0.4.9 | >=1.7.0     | >=1.7.0     | >=3.8.0   | >=v1.7.0  |
+| 0.3.2  | >=1.15      | >=0.4.9 | >=1.7.0     | >=1.7.0     | >=3.8.0   | >=v1.7.0  |
+| 0.3.1  | >=1.15      | >=0.4.9 | >=1.7.0     | >=1.7.0     | >=3.8.0   | >=v1.7.0  |
+| 0.3.0  | >=1.15      | >=0.4.9 | >=1.7.0     | >=1.7.0     | >=3.8.0   | >=v1.7.0  |
+| 0.2.10 | >=1.15      | >=0.4.9 | >=1.7.0     | >=1.7.0     | >=3.8.0   | >=v1.7.0  |
 | 0.2.9  | >=1.15      | >=0.4.9 | >=1.7.0     | >=1.7.0     | >=3.8.0   | >=v1.7.0  |
 | 0.2.8  | >=1.10      | >=0.4.9 | >=1.7.0     | >=1.7.0     | >=3.8.0   | >=v1.7.0  |
 | 0.2.7  | >=1.10      | >=0.4.9 | >=1.7.0     | >=1.7.0     | >=3.8.0   | >=v1.7.0  |

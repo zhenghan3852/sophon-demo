@@ -52,7 +52,7 @@ python3 export_models_from_Huggingface.py
 
 ```bash
 pip3 install dfss --upgrade
-python3 -m dfss --url=open@sophgo.com:/aigc/tpu_mlir-1.6.502-py3-none-any.whl
+python3 -m dfss --url=open@sophgo.com:sophon-demo/Stable_diffusion_v1_5/tpu_mlir-1.6.502-py3-none-any.whl
 ```
 
 安装好后需在TPU-MLIR环境中进入例程目录。使用TPU-MLIR将onnx模型编译为BModel，具体方法可参考《TPU-MLIR快速入门手册》的“3. 编译ONNX模型”(请从[算能官网](https://developer.sophgo.com/site/index/material/all/all.html)相应版本的SDK中获取)。
@@ -106,10 +106,8 @@ cd scripts
 ```bash
 cd /data/
 mkdir memedit && cd memedit
-wget -nd https://sophon-file.sophon.cn/sophon-prod-s3/drive/23/09/11/13/DeviceMemoryModificationKit.tgz
-tar xvf DeviceMemoryModificationKit.tgz
-cd DeviceMemoryModificationKit
-tar xvf memory_edit_{vx.x}.tar.xz #vx.x是版本号
+wget -nd https://github.com/sophgo/sophon-tools/releases/download/v24.09.21/memory_edit_v2.10.tar.xz
+tar xvf memory_edit_v2.10.tar.xz
 cd memory_edit
 ./memory_edit.sh -p #这个命令会打印当前的内存布局信息
 ./memory_edit.sh -c -npu 7615 -vpu 3072 -vpp 3072 #npu也可以访问vpu和vpp的内存

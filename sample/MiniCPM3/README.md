@@ -30,10 +30,8 @@ MiniCPM3是开源中英双语对话模型，关于它的特性，请前往源rep
 ```bash
 cd /data/
 mkdir memedit && cd memedit
-wget -nd https://sophon-file.sophon.cn/sophon-prod-s3/drive/23/09/11/13/DeviceMemoryModificationKit.tgz
-tar xvf DeviceMemoryModificationKit.tgz
-cd DeviceMemoryModificationKit
-tar xvf memory_edit_{vx.x}.tar.xz #vx.x是版本号
+wget -nd https://github.com/sophgo/sophon-tools/releases/download/v24.09.21/memory_edit_v2.10.tar.xz
+tar xvf memory_edit_v2.10.tar.xz
 cd memory_edit
 ./memory_edit.sh -p #这个命令会打印当前的内存布局信息
 
@@ -110,7 +108,7 @@ sudo reboot
 这里的测试输入为："请使用C++写一段冒泡排序算法。"
 |   测试平台   |     测试程序       |           测试模型                                  |first token latency(s) |token per second(tokens/s)| 
 | ----------- | ----------------  | ------------------------------------------------- | --------------------- | ------------------------ | 
-| SE7-32      | minicpm3.py           | minicpm3-4b_int4_seq512_1dev.bmodel                   |    0.592              |    10.047                | 
+| SE7-32      | minicpm3.py           | minicpm3-4b_int4_seq512_1dev.bmodel                   |    0.577              |    12.888                | 
 | SC7-HP75    | minicpm3.py           | minicpm3-4b_int4_seq512_1dev.bmodel                   |    0.747              |    7.891                 | 
 | SRM1-20     | minicpm3.py           | minicpm3-4b_int4_seq512_1dev.bmodel                   |    0.860              |    4.045                 |
 

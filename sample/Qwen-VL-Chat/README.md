@@ -28,22 +28,15 @@ Qwen-VL是阿里云研发的大规模视觉语言模型（Large Vision Language 
 ## 3. 运行环境准备
 
 在PCIe上无需修改内存，以下为soc模式相关：
-对于1684X系列设备（如SE7/SM7），都可以通过这种方式完成环境准备，使其满足Qwen-VL运行条件。首先，确保使用V24.04.01刷机包，刷机包可由如下命令获取：
-
-```bash
-pip3 install dfss --upgrade
-python3 -m dfss --url=open@sophgo.com:sophon-sdk/release/v24.04.01/sophon-img/sdcard.tgz
-```
+对于1684X系列设备（如SE7/SM7），都可以通过这种方式完成环境准备，使其满足Qwen-VL运行条件。首先，确保使用V24.04.01 SDK，可以通过bm_version命令检查SDK版本，如需要升级，可以从sophgo.com获取v24.04.01版本SDK，刷机包位于sophon-img-xxx/sdcard.tgz中，参考对应的产品手册进行刷机。
 
 确保SDK版本后，在1684x SoC环境上，参考如下命令修改设备内存。
 
 ```bash
 cd /data/
 mkdir memedit && cd memedit
-wget -nd https://sophon-file.sophon.cn/sophon-prod-s3/drive/23/09/11/13/DeviceMemoryModificationKit.tgz
-tar xvf DeviceMemoryModificationKit.tgz
-cd DeviceMemoryModificationKit
-tar xvf memory_edit_{vx.x}.tar.xz #vx.x是版本号
+wget -nd https://github.com/sophgo/sophon-tools/releases/download/v24.09.21/memory_edit_v2.10.tar.xz
+tar xvf memory_edit_v2.10.tar.xz
 cd memory_edit
 ./memory_edit.sh -p #这个命令会打印当前的内存布局信息
 ./memory_edit.sh -c -npu 7615 -vpu 3072 -vpp 3072 #npu也可以访问vpu和vpp的内存

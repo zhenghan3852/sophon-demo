@@ -13,9 +13,11 @@
   - [6. 程序性能测试](#6-程序性能测试)
 
 ## 1. 简介
-Qwen / Qwen1.5/ Qwen2/ Qwen2.5是开源中英双语对话模型，关于它的特性，请前往源repo查看：[Qwen](https://huggingface.co/Qwen)。 本例程对Qwen / Qwen1.5/ Qwen2/ Qwen2.5进行移植，使之能在SOPHON BM1684X、BM1688/CV186X（仅限Qwen1.5 1.8b、Qwen2.5 1.5b）上进行推理测试。
+Qwen / Qwen1.5/ Qwen2/ Qwen2.5/ Qwen3是开源中英双语对话模型，关于它的特性，请前往源repo查看：[Qwen](https://huggingface.co/Qwen)。 本例程对Qwen / Qwen1.5/ Qwen2/ Qwen2.5/ Qwen3进行移植，使之能在SOPHON BM1684X、BM1688/CV186X上进行推理测试。
 
-本例程还支持DeepSeek-R1-Distill-Qwen-1.5B/ DeepSeek-R1-Distill-Qwen-7B，关于它的特性，请前往源repo查看：[DeepSeek-R1-Distill-Qwen-1.5B](https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B)，[DeepSeek-R1-Distill-Qwen-7B](https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-7B)。本例程对这些模型进行移植，使之能在SOPHON BM1684X、BM1688/CV186X上进行推理测试。
+本例程还支持DeepSeek-R1-Distill-Qwen-1.5B/7B/14B，关于它们的特性，请前往源repo查看：[DeepSeek-R1-Distill-Qwen-1.5B](https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B)，[DeepSeek-R1-Distill-Qwen-7B](https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-7B)，[DeepSeek-R1-Distill-Qwen-14B](https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-14B)。本例程对这些模型进行移植，使之能在SOPHON BM1684X、BM1688/CV186X上进行推理测试。
+
+本例程还支持QwQ-32B，关于它的特性，请前往源repo查看：[QwQ-32B](https://huggingface.co/Qwen/QwQ-32B)，本例程对这个模型进行移植，使之能在BM1684X(仅限SC7-224T加速卡)上进行推理测试。
 
 对于BM1684X，该例程支持在V24.04.01(libsophon_0.5.1)及以上的SDK上运行，支持在插有1684X加速卡(SC7系列)的x86/riscv主机上运行，也可以在1684X SoC设备（如SE7、SM7、Airbox等）上运行。在SoC上运行需要额外进行环境配置，请参照[运行环境准备](#3-运行环境准备)完成环境部署。
 
@@ -23,12 +25,13 @@ Qwen / Qwen1.5/ Qwen2/ Qwen2.5是开源中英双语对话模型，关于它的�
 
 ## 2. 特性
 * 支持BM1684X(x86 PCIe、SoC、riscv PCIe)
-* Qwen1.5 1.8b支持BM1688/CV186X(SoC)
-* Qwen2.5 1.5b支持BM1688/CV186X(SoC)
+* 支持BM1688/CV186X(SoC)
+* QwQ-32B支持BM1684X(SC7-224T)
 * 支持INT8、INT4模型编译和推理
 * 支持基于SAIL推理的Python例程
+* 支持基于BMRT推理的CPP例程
 * 支持多轮对话
-
+* 支持动态模型推理
 
 ## 3. 运行环境准备
 在PCIe上无需修改内存，以下为soc模式相关：
@@ -37,10 +40,8 @@ Qwen / Qwen1.5/ Qwen2/ Qwen2.5是开源中英双语对话模型，关于它的�
 ```bash
 cd /data/
 mkdir memedit && cd memedit
-wget -nd https://sophon-file.sophon.cn/sophon-prod-s3/drive/23/09/11/13/DeviceMemoryModificationKit.tgz
-tar xvf DeviceMemoryModificationKit.tgz
-cd DeviceMemoryModificationKit
-tar xvf memory_edit_{vx.x}.tar.xz #vx.x是版本号
+wget -nd https://github.com/sophgo/sophon-tools/releases/download/v24.09.21/memory_edit_v2.10.tar.xz
+tar xvf memory_edit_v2.10.tar.xz
 cd memory_edit
 ./memory_edit.sh -p #这个命令会打印当前的内存布局信息
 
@@ -55,7 +56,7 @@ sudo cp /data/memedit/DeviceMemoryModificationKit/memory_edit/boot.itb /boot/boo
 sudo reboot
 
 #如果是se9-8 4G版本设备，执行以下命令
-./memory_edit.sh -c -npu 2300 -vpu 0 -vpp 0 #npu也可以访问vpu和vpp的内存
+./memory_edit.sh -c -npu 2300 -vpu 0 -vpp 40 #npu也可以访问vpu和vpp的内存
 sudo cp /data/memedit/DeviceMemoryModificationKit/memory_edit/boot.itb /boot/boot.itb && sync
 sudo reboot
 ```
@@ -82,8 +83,14 @@ sudo reboot
 # qwen2.5 1684x
 ./scripts/download.sh qwen2.5
 
+# qwen3 1684x
+./scripts/download.sh qwen3
+
 # deepseek-r1-distill-qwen2 1684x
 ./scripts/download.sh deepseek-r1-distill-qwen2
+
+# qwq-32b 1684x
+./scripts/download.sh qwq-32b
 
 # Include all bm1688 models
 ./scripts/download.sh bm1688
@@ -98,19 +105,29 @@ sudo reboot
 ├── docs
 │   └── Qwen_Export_Guide.md        #Qwen onnx导出和bmodel编译指南
 ├── models
-│   └── BM1684X                     #download.sh下载的bmodel
-│       ├── qwen-xxx.bmodel
-│       ├── qwen1.5-xxx.bmodel
-│       ├── qwen2-xxx.bmodel
-│       ├── deepseek-r1-distill-qwen-1.5b
-│       └── deepseek-r1-distill-qwen-7b
-│   └── CV186X                    #download.sh下载的cv186x bmodel
-│       └── qwen1.5-xxx.bmodel
+│   ├── BM1684X                     #download.sh下载的bmodel
+│   │   ├── qwen-xxx.bmodel
+│   │   ├── qwen1.5-xxx.bmodel
+│   │   ├── qwen2-xxx.bmodel
+│   │   ├── deepseek-r1-distill-qwen-1.5b
+│   │   ├── deepseek-r1-distill-qwen-7b
+│   │   ├── deepseek-r1-distill-qwen-14b
+│   │   └── qwq-32b
+│   ├── CV186X                    #download.sh下载的cv186x bmodel
+│   │   └── qwen1.5-xxx.bmodel
 │   └── BM1688                    #download.sh下载的bm1688 bmodel
 │       ├── qwen1.5-xxx.bmodel
 │       ├── qwen2.5-xxx.bmodel
 │       ├── deepseek-r1-distill-qwen-1.5b
 │       └── deepseek-r1-distill-qwen-7b
+├── cpp
+│   ├── README.md                 # CPP例程文档
+│   └── qwen_bmlib                      
+│       ├── CMakeLists.txt        # 编译配置文件
+│       ├── main.cpp              # demo
+│       ├── qwen.cpp              # qwen cpp源文件
+│       ├── qwen.hpp              # qwen cpp头文件
+│       └── utils.hpp             # 功能 cpp头文件
 ├── python
 │   ├── qwen.py                     #Qwen python推理脚本
 │   ├── web_demo.py                 # web demo
@@ -161,6 +178,7 @@ sudo reboot
 ## 5. 例程测试
 
 - [Python例程](./python/README.md)
+- [CPP例程](./cpp/README.md)
 
 ## 6. 程序性能测试
 
@@ -174,13 +192,23 @@ sudo reboot
 | SE7-32      | qwen.py           | qwen2-7b_int4_seq512_1dev.bmodel                     |    0.728              |    9.504                 | 
 | SE7-32      | qwen.py           | qwen2.5-7b_int4_seq512_1dev.bmodel                   |    0.652              |    10.26                 | 
 | SE7-32      | qwen.py           | qwen2.5-7b_int4_seq2048_1dev.bmodel                  |    2.704              |    9.753                 | 
-| SE7-32      | qwen.py           | deepseek-r1-distill-qwen2-1.5b_w4bf16_seq8192.bmodel |    5.455              |    20.083                | 
+| SE7-32      | qwen.py           | qwen3-4b_int4_seq512_1dev.bmodel                     |    0.464              |    15.857                |
+| SE7-32      | qwen.py           | deepseek-r1-distill-qwen2-1.5b_w4bf16_seq8192.bmodel |    4.983              |    25.689                | 
 | SE7-32      | qwen.py           | deepseek-r1-distill-qwen2-7b_w4bf16_seq2048.bmodel   |    2.937              |    8.301                 | 
+| SE7-32      | qwen.py           | deepseek-r1-distill-qwen2-14b_w4bf16_seq512.bmodel   |    1.297              |    5.652                 | 
+| SE7-32      | qwen.py           | qwen2.5-1.5b_int4_seq512_1dev.bmodel                 |    0.185              |    41.078                | 
+| SE7-32      | qwen.py           | qwen2.5-1.5b_int4_seq1024_1dev.bmodel                |    0.370              |    39.335                | 
+| SE7-32      | main.cpp          | qwen2.5-1.5b_int4_seq512_1dev.bmodel                 |    0.200              |    28.188                | 
+| SE7-32      | main.cpp          | qwen2.5-1.5b_int4_seq1024_1dev.bmodel                |    0.383              |    27.576                | 
 | SC7-HP75    | qwen.py           | qwen1.5-7b_int4_seq4096_2dev_dyn.bmodel              |    >=1.56             |    9.748                 |
-| SE9-16      | qwen.py           | qwen1.5-1.8b_int4_seq512_bm1688_1dev.bmodel          |    1.094              |    12.995                | 
-| SE9-16      | qwen.py           | qwen1.5-1.8b_int4_seq512_bm1688_1dev_2core.bmodel    |    0.701              |    14.858                |
-| SE9-16      | qwen.py           | qwen2.5-1.5b_int4_seq2048_bm1688_1dev_2core.bmodel   |    3.016              |    14.613                | 
-| SE9-16      | qwen.py           | deepseek-r1-distill-qwen-1.5b_int4_seq1024_1688_2core.bmodel   |    1.485              |    14.865                | 
+| SC7-224T    | qwen.py           | qwq-32b_int4_seq2048_2dev.bmodel                     |    8.398              |    3.852                 |
+| SC7-224T    | qwen.py           | qwq-32b_int4_seq2048_4dev.bmodel                     |    5.663              |    5.961                 |
+| SC7-224T    | qwen.py           | qwq-32b_int4_seq2048_8dev.bmodel                     |    4.530              |    5.929                 |
+| SE9-16      | qwen.py           | qwen1.5-1.8b_int4_seq512_bm1688_1dev_2core.bmodel    |    0.559              |    21.171                |
+| SE9-16      | qwen.py           | qwen2.5-1.5b_int4_seq1024_1688_2core.bmodel          |    1.283              |    20.171                | 
+| SE9-16      | qwen.py           | qwen3-4b_w4bf16_seq512_bm1688_1core.bmodel            |   2.991              |    6.161                |
+| SE9-16      | qwen.py           | qwen3-4b_w4bf16_seq512_bm1688_2core.bmodel            |   1.656               |   7.982                 |
+| SE9-16      | qwen.py           | deepseek-r1-distill-qwen-1.5b_int4_seq1024_1688_2core.bmodel   |    1.418              |    19.261                | 
 | SE9-16      | qwen.py           | deepseek-r1-distill-qwen-7b_int4_seq1024_1688_2core.bmodel   |    10.565              |    5.286                |
 | SE9-8       | qwen.py           | qwen1.5-1.8b_int4_seq512_cv186x_1dev.bmodel          |    1.007              |    13.226                | 
 | SRM1-20     | qwen.py           | qwen-7b_int4_seq512_1dev.bmodel                      |    0.915              |    5.850                 | 
@@ -190,8 +218,9 @@ sudo reboot
 | SRM1-20     | qwen.py           | qwen2-7b_int4_seq512_1dev.bmodel                     |    0.981              |    6.234                 | 
 | SRM1-20     | qwen.py           | qwen2.5-1.5b_int4_seq512_1dev.bmodel                 |    0.283              |    14.674                |
 | SRM1-20     | qwen.py           | qwen2.5-1.5b_int4_seq1024_1dev.bmodel                |    0.503              |    13.970                | 
-| SRM1-20     | qwen.py           | deepseek-r1-distill-qwen2-7b_w4bf16_seq2048.bmodel   |    3.437              |    6.213                 | 
-
+| SRM1-20     | qwen.py           | deepseek-r1-distill-qwen2-1.5b_w4bf16_seq8192.bmodel |    5.950              |    12.524                | 
+| SRM1-20     | qwen.py           | deepseek-r1-distill-qwen2-7b_w4bf16_seq2048.bmodel   |    3.437              |    6.213                 |  
+| SRM1-20     | qwen.py           | deepseek-r1-distill-qwen2-14b_w4bf16_seq512.bmodel   |    1.577              |    3.958                 |
 
 > **测试说明**：  
 > 1. 性能测试结果具有一定的波动性，建议多次测试取平均值；

@@ -70,26 +70,6 @@ void CLIP::init(const std::string& image_model, const std::string& text_model, c
     text_net_batch_size = text_net_input_shape->dims[0];
     top_k = 5;
 
-    // load text_projection
-    std::filesystem::path script_path = std::filesystem::current_path();
-    std::ifstream file(script_path / "../../models/text_projection_512_512.npy", std::ios::binary);
-    char header[128];
-    file.read(header, 128);
-    size_t header_length = 0;
-    while (header[header_length] != '\n') header_length++;
-    file.seekg(header_length + 1, std::ios::beg);
-
-    const size_t rows = 512, cols = 512;
-    text_projection.resize(rows, std::vector<float>(cols));
-
-    std::vector<float> flat_data(rows * cols);
-    file.read(reinterpret_cast<char*>(flat_data.data()), flat_data.size() * sizeof(float));
-    for (size_t i = 0; i < rows; ++i) {
-        for (size_t j = 0; j < cols; ++j) {
-            text_projection[i][j] = flat_data[i * cols + j];
-        }
-    }
-
     encode_image_time = 0.0;
     encode_text_time = 0.0;
     preprocess_time = 0.0;
@@ -105,7 +85,6 @@ void CLIP::deinit() {
         p_bmrt_image = nullptr;
     }
     bm_dev_free(bm_handle);
-    text_projection.clear();
 
     if (image_name) {
         free(image_name);
@@ -120,6 +99,13 @@ void CLIP::deinit() {
     encode_image_time = 0.0;
     encode_text_time = 0.0;
     preprocess_time = 0.0;
+}
+
+size_t CLIP::get_max_token_len() const {
+    if (text_net_input_shape == nullptr) {
+        return 77;
+    }
+    return text_net_input_shape->dims[1];
 }
 
 std::pair<std::vector<float>, std::vector<int>> CLIP::topk(const std::vector<float>& x, int k) {

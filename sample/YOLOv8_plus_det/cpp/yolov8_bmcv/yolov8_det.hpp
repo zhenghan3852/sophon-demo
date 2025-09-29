@@ -46,18 +46,19 @@ class YoloV8_det {
     int max_wh = 7680;  // (pixels) maximum box width and height
     bmcv_convert_to_attr converto_attr;
     TimeStamp tmp_ts;
+    bool is_output_transposed = true;
 
 private:
     int pre_process(const std::vector<bm_image>& images, 
                     bm_tensor_t& input_tensor,
                     std::vector<std::pair<int, int>>& txy_batch, 
-                    std::vector<float>& ratios_batch);
+                    std::vector<std::pair<float, float>>& ratios_batch);
     int forward(bm_tensor_t& input_tensor, std::vector<bm_tensor_t>& output_tensors);
     float* get_cpu_data(bm_tensor_t* tensor, float scale);
     int post_process(const std::vector<bm_image>& input_images, 
                      std::vector<bm_tensor_t>& output_tensors, 
                      const std::vector<std::pair<int, int>>& txy_batch, 
-                     const std::vector<float>& ratios_batch, 
+                     const std::vector<std::pair<float, float>>& ratios_batch,
                      std::vector<YoloV8BoxVec>& boxes);
     static float get_aspect_scaled_ratio(int src_w, int src_h, int dst_w, int dst_h, bool* alignWidth);
     int argmax(float* data, int num);
@@ -120,6 +121,11 @@ public:
             auto& shape = netinfo->stages[0].output_shapes[i];
             if (shape.num_dims == 3) {
                 m_class_num = shape.dims[2] - 4;
+                if (shape.dims[1] < shape.dims[2]) {
+                    std::cout << "Your model's output is not efficient for cpp, please refer to the docs/YOLOv8_Export_Guide.md to export model which has transposed output." << std::endl;
+                    m_class_num = shape.dims[1] - 4;
+                    is_output_transposed = false;
+                }
             }
         }
         if (m_class_num == -1) {

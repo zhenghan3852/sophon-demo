@@ -382,6 +382,11 @@ int VideoDecFFM::openDec(bm_handle_t* dec_handle, const char* input) {
     int ret = 0;
     AVDictionary* dict = NULL;
     av_dict_set(&dict, "rtsp_flags", "prefer_tcp", 0);
+#if LIBAVCODEC_VERSION_MAJOR > 58
+    av_dict_set(&dict, "timeout", "5*1000*1000", 0);
+#else
+    av_dict_set(&dict, "stimeout", "5*1000*1000", 0);
+#endif
     ret = avformat_open_input(&ifmt_ctx, input, NULL, &dict);
     if (ret < 0) {
         av_log(NULL, AV_LOG_ERROR, "Cannot open input file\n");
@@ -403,8 +408,8 @@ int VideoDecFFM::openDec(bm_handle_t* dec_handle, const char* input) {
     }
     av_log(video_dec_ctx, AV_LOG_INFO, "openDec video_stream_idx = %d, pix_fmt = %d\n", video_stream_idx, pix_fmt);
 
-    thread push(&VideoDecFFM::vidPushImage, this);
-    push.detach();
+    /* Create a thread and assign it to a member variable */
+    pushThread = std::thread(&VideoDecFFM::vidPushImage, this); 
 
     av_dict_free(&dict);
 
@@ -413,6 +418,16 @@ int VideoDecFFM::openDec(bm_handle_t* dec_handle, const char* input) {
 
 void VideoDecFFM::closeDec() {
     quit_flag = true;
+    /* Wait for the thread to finish */
+    try {
+        if (pushThread.joinable()) {
+            std::cout << "vidPushImage thread exiting..." << std::endl; // 添加日志输出
+            pushThread.join();
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "Exception while joining thread: " << e.what() << std::endl;
+    }
+
     if (video_dec_ctx) {
         avcodec_free_context(&video_dec_ctx);
         video_dec_ctx = NULL;
@@ -574,7 +589,7 @@ AVFrame* VideoDecFFM::flushDecoder()
 
 void* VideoDecFFM::vidPushImage() {
     while (1) {
-        while (queue.size() == QUEUE_MAX_SIZE) {
+        while (queue.size() == QUEUE_MAX_SIZE && !quit_flag) {
             if (is_rtsp) {
                 std::lock_guard<std::mutex> my_lock_guard(lock);
                 bm_image* img = queue.front();
@@ -858,7 +873,7 @@ bm_status_t jpgDec(bm_handle_t& handle, uint8_t* bs_buffer, int numBytes, bm_ima
 
     // filter convert format to I420
     // TODO
-    if (!hardware_decode) {
+    if (!hardware_decode && pFrame->format == AV_PIX_FMT_YUVJ420P) {
         int height = pFrame->height;
         int width = pFrame->width;
         uchar bgr_buffer[height * width * 3];

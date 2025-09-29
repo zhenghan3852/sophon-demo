@@ -24,7 +24,8 @@
 #include <string>
 #include <filesystem>
 
-void CLIP::init(const std::string& image_model, const std::string& text_model, const int &dev_id) {
+void CLIP::init(const std::string& image_model, const std::string& text_model, const int &dev_id, 
+                const std::string text_projection_path, const std::string clip_type_name) {
     bm_status_t status = bm_dev_request(&bm_handle, dev_id);
     assert(BM_SUCCESS == status);
     std::cout << "set device id: " << dev_id << std::endl;
@@ -70,10 +71,10 @@ void CLIP::init(const std::string& image_model, const std::string& text_model, c
     text_net_output_shape = text_net->stages[0].output_shapes;
     text_net_batch_size = text_net_input_shape->dims[0];
     top_k = 5;
+    clip_type = clip_type_name;
 
     // load text_projection
-    std::filesystem::path script_path = std::filesystem::current_path();
-    std::ifstream file(script_path / "../../models/text_projection_512_512.npy", std::ios::binary);
+    std::ifstream file(text_projection_path, std::ios::binary);
     char header[128];
     file.read(header, 128);
     size_t header_length = 0;
@@ -81,13 +82,13 @@ void CLIP::init(const std::string& image_model, const std::string& text_model, c
     file.seekg(header_length + 1, std::ios::beg);
 
     const size_t rows = 512, cols = 512;
-    text_projection.resize(rows, std::vector<float>(cols));
+    text_projection.resize(rows, cols);
 
     std::vector<float> flat_data(rows * cols);
     file.read(reinterpret_cast<char*>(flat_data.data()), flat_data.size() * sizeof(float));
     for (size_t i = 0; i < rows; ++i) {
         for (size_t j = 0; j < cols; ++j) {
-            text_projection[i][j] = flat_data[i * cols + j];
+            text_projection(i, j) = flat_data[i * cols + j];
         }
     }
 
@@ -106,7 +107,8 @@ void CLIP::deinit() {
         p_bmrt_image = nullptr;
     }
     bm_dev_free(bm_handle);
-    text_projection.clear();
+    // 替换 text_projection.clear(); 为调整维度为0×0
+    text_projection.resize(0, 0);
     
     if (image_name) {
         free(image_name);
@@ -121,6 +123,13 @@ void CLIP::deinit() {
     encode_image_time = 0.0;
     encode_text_time = 0.0;
     preprocess_time = 0.0;
+}
+
+size_t CLIP::get_max_token_len() const {
+    if (text_net_input_shape == nullptr) {
+        return 77;
+    }
+    return text_net_input_shape->dims[1];
 }
 
 std::pair<std::vector<float>, std::vector<int>> CLIP::topk(const std::vector<float>& x, int k) {
@@ -210,15 +219,36 @@ cv::Mat CLIP::preprocess_cpu_letterbox(const cv::Mat& image) {
     int height = blob.size[2];
     int width = blob.size[3];
 
-    // hwc -> chw
-    cv::Mat outputImage = blob.reshape(1, height);
-    outputImage = outputImage.reshape(channels, height);
-    return outputImage;
+    return blob;
+}
+
+cv::Mat CLIP::mobile_clip_preprocess(const cv::Mat& image) {
+    cv::Size new_shape(image_resolution, image_resolution);
+    cv::Mat resized_image;
+    cv::resize(image, resized_image, new_shape, 0, 0, cv::INTER_CUBIC);
+   
+    // Convert to RGB and normalize
+    cv::Mat rgb_image;
+    cv::cvtColor(resized_image, rgb_image, cv::COLOR_BGR2RGB);
+    rgb_image.convertTo(rgb_image, CV_32F, 1.0 / 255.0); // Convert to float and scale to [0, 1]
+
+    cv::Mat blob;
+    cv::dnn::blobFromImage(rgb_image, blob);
+    int batchSize = blob.size[0];
+    int channels = blob.size[1];
+    int height = blob.size[2];
+    int width = blob.size[3];
+
+    return blob;
 }
 
 std::vector<float> CLIP::preprocess(const cv::Mat& image) {
     auto start_time = std::chrono::high_resolution_clock::now();
-    cv::Mat processed_image = preprocess_cpu_letterbox(image);
+    cv::Mat processed_image;
+    if(clip_type == "mobile_clip")
+        processed_image = mobile_clip_preprocess(image);
+    else
+        processed_image = preprocess_cpu_letterbox(image);
     std::vector<float> image_vector(bmrt_shape_count(image_net_input_shape));
     std::memcpy(image_vector.data(), processed_image.data, bmrt_shape_count(image_net_input_shape) * sizeof(float));
 
@@ -253,32 +283,35 @@ std::vector<float> CLIP::encode_text(const std::vector<int>& text) {
     auto start_time = std::chrono::high_resolution_clock::now();
     auto &in0_mem = text_net->stages[0].input_mems[0];
     auto &out_mem = text_net->stages[0].output_mems[0];
-    uint64_t in_shape = bmrt_shape_count(text_net_input_shape);   
-    uint64_t out_shape = bmrt_shape_count(text_net_output_shape);   
+    uint64_t in_shape = bmrt_shape_count(text_net_input_shape);
+    uint64_t out_shape = bmrt_shape_count(text_net_output_shape);
 
     auto ret = bm_memcpy_s2d_partial(bm_handle, in0_mem, (void*)text.data(), text.size() * sizeof(int));
     assert(BM_SUCCESS == ret);
+
     net_launch(text_net, p_bmrt_text);
+
     std::vector<float> output_data(out_shape, 0);
     ret = bm_memcpy_d2s_partial(bm_handle, output_data.data(), out_mem, output_data.size() * sizeof(float));
     assert(BM_SUCCESS == ret);
+
     std::vector<float> result(embed_dim, 0.0f);
     auto maxIt = std::max_element(text.begin(), text.end());
     int max_index = std::distance(text.begin(), maxIt);
     int row_start_index = max_index * 512;
-    std::vector<float> extracted_row(output_data.begin() + row_start_index, output_data.begin() + row_start_index + 512);
+    std::vector<float> extracted_row(output_data.begin() + row_start_index, 
+                                    output_data.begin() + row_start_index + 512);
 
-    for (int i = 0; i < 512; ++i) {
-        for (int j = 0; j < 512; ++j) {
-            result[i] += extracted_row[j] * text_projection[j][i];
-        }
-    }
+    Eigen::Map<Eigen::RowVectorXf> extracted_row_eigen(extracted_row.data(), extracted_row.size());
+    Eigen::RowVectorXf result_eigen = extracted_row_eigen * text_projection;
+    std::copy(result_eigen.data(), result_eigen.data() + result_eigen.size(), result.data());
 
     normalize(result);
     encode_text_time += std::chrono::duration<float>(std::chrono::high_resolution_clock::now() - start_time).count();
 
     return result;
 }
+
 
 void CLIP::normalize(std::vector<float>& features) {
     float norm = std::sqrt(std::inner_product(features.begin(), features.end(), features.begin(), 0.0f));

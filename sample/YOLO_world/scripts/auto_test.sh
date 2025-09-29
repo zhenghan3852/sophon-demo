@@ -10,6 +10,7 @@ TPUID=0
 ALL_PASS=1
 PYTEST="auto_test"
 ECHO_LINES=20
+CASE_MODE="partly"
 if [ -f "tools/benchmark.txt" ]; then
   rm tools/benchmark.txt
 fi
@@ -89,13 +90,13 @@ function bmrt_test_case(){
    fi
    for time in "${calculate_times[@]}"
    do
-     printf "| %-35s| % 15s |\n" "$1" "$time"
+     printf "| %-15s | %-35s| % 15s |\n" "$PLATFORM" "$1" "$time"
    done
 }
 function bmrt_test_benchmark(){
     pushd models
-    printf "| %-35s| % 15s |\n" "测试模型" "calculate time(ms)"
-    printf "| %-35s| % 15s |\n" "-------------------" "--------------"
+    printf "| %-15s | %-35s| % 15s |\n" "测试平台" "测试模型" "calculate time(ms)"
+    printf "| %-15s | %-35s| % 15s |\n" "-------" "-------------------" "--------------"
    
     if test $TARGET = "BM1684X"; then
       bmrt_test_case BM1684X/yoloworld_fp32_1b.bmodel
@@ -328,7 +329,7 @@ then
 elif test $MODE = "pcie_test"
 then
   download
-  pip3 install pycocotools opencv-python-headless -i https://pypi.tuna.tsinghua.edu.cn/simple 
+  pip3 install pycocotools opencv-python-headless ftfy regex torch setuptools==69.5.1 -i https://pypi.tuna.tsinghua.edu.cn/simple 
   if test $TARGET = "BM1684X"
   then
     if test $CASE_MODE = "fully"
@@ -375,7 +376,7 @@ then
 elif test $MODE = "soc_test"
 then
   download
-  pip3 install pycocotools opencv-python-headless -i https://pypi.tuna.tsinghua.edu.cn/simple
+  pip3 install pycocotools opencv-python-headless ftfy regex torch -i https://pypi.tuna.tsinghua.edu.cn/simple 
   if test $TARGET = "BM1684X"
   then
     if test $CASE_MODE = "fully"

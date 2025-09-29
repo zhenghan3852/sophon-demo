@@ -12,7 +12,7 @@
 
 ## 1. 简介
 
-CLIP（Contrastive Language-Image Pre-Training）是一个在多种（图像，文本）配对上训练的神经网络。它可以用自然语言进行指导，以预测给定图像最相关的文本片段，而无需直接针对该任务进行优化，这与GPT-2和3的零样本（zero-shot）能力类似。本例程对[CLIP官方开源仓库](https://github.com/openai/CLIP)中的算法进行移植，其中CLIP的中文版本模型是对CN-CLIPViT-B/16的移植，使之能在SOPHON BM1684X,BM1688,CV186X上进行推理。
+CLIP（Contrastive Language-Image Pre-Training）是一个在多种（图像，文本）配对上训练的神经网络。它可以用自然语言进行指导，以预测给定图像最相关的文本片段，而无需直接针对该任务进行优化，这与GPT-2和3的零样本（zero-shot）能力类似。本例程对[CLIP官方开源仓库](https://github.com/openai/CLIP)中的算法进行移植，其中CLIP的中文版本模型是对CN-CLIPViT-B/16的移植，使之能在SOPHON BM1684X,BM1688,CV186X上进行推理；本例程也对[Mobile CLIP官方开源仓库](https://github.com/apple/ml-mobileclip/tree/main/mobileclip)中的算法进行了移植，目前适配了b/blt模型，仅支持英文。
 
 [[Blog]](https://openai.com/blog/clip/) [[Paper]](https://arxiv.org/abs/2103.00020)
 
@@ -26,7 +26,7 @@ CLIP（Contrastive Language-Image Pre-Training）是一个在多种（图像，�
 
 ## 3. 准备数据与模型
 
-Pytorch模型在编译前要导出成onnx模型，具体可参考[CLIP模型导出](./docs/Clip_Export_Guide.md)。
+Pytorch模型在编译前要导出成onnx模型，具体可参考[CLIP模型导出](./docs/Clip_Export_Guide.md)，文档中还详细说明了通过修改源码实现性能优化的方法，以减少数据搬运并显著提升推理速度。
 ​
 本例程在`scripts`目录下提供了相关模型和数据集的下载脚本`download.sh`，您也可以自己准备模型和数据集，并参考[4. 模型编译](#4-模型编译)进行模型转换。
 
@@ -39,6 +39,8 @@ chmod -R +x scripts/
 ./scripts/download.sh [target] 
 # 中文版CLIP，下载模型，target可选输入BM1684X, BM1688；不输入默认下载全部模型
 ./scripts/download_chinese_bmodel.sh [target] 
+# Mobile CLIP，下载模型，target可选输入BM1684X, BM1688；不输入默认下载全部模型
+./scripts/download_mobile_clip_bmodel.sh [target] 
 ```
 
 下载的模型包括：
@@ -53,8 +55,8 @@ chmod -R +x scripts/
 │   ├── clip_text_vitb32_bm1688_f16_1b_2core.bmodel     # encode_text部分fp16 bmodel，num_core=2
 │   └── clip_text_vitb32_bm1688_f16_1b.bmodel           # encode_text部分fp16 bmodel
 ├── CV186X
-│   ├── clip_image_vitb32_cv186x_f16_1b.bmodel          # encode_image部分fp16 bmodel，num_core=2
-│   └── clip_text_vitb32_cv186x_f16_1b.bmodel           # encode_text部分fp16 bmodel，num_core=2
+│   ├── clip_image_vitb32_cv186x_f16_1b.bmodel          # encode_image部分fp16 bmodel
+│   └── clip_text_vitb32_cv186x_f16_1b.bmodel           # encode_text部分fp16 bmodel
 ├── onnx
 │   ├── clip_image_vitb32.onnx                          # encode_image部分onnx模型
 │   └── clip_text_vitb32.onnx                           # encode_text部分onnx模型
@@ -77,6 +79,9 @@ chmod -R +x scripts/
 
 # 中文版CLIP
 ./scripts/gen_chinese_fp16bmodel_mlir.sh bm1684x #bm1688
+
+# Mobile CLIP
+./scripts/gen_mobile_clip_fp16bmodel_mlir.sh bm1684x #bm1688
 ```
 
 执行上述命令会在`models/BM1684X/`下生成`CLIP_fp16_1b.bmodel`文件，即转换好的FP16 BModel。
@@ -99,20 +104,19 @@ bmrt_test --bmodel models/BM1684X/clip_image_vitb32_bm1684x_f16_1b.bmodel
 测试结果中的`calculate time`就是模型推理的时间，多batch size模型应当除以相应的batch size才是每张图片的理论推理时间。
 测试各个模型的理论推理时间，结果如下：
 
-| 测试clip_image_vitb32模型                           | calculate time(ms) |
-| --------------------------------------------------- | ------------------ |
-| BM1684X/clip_image_vitb32_bm1684x_f16_1b.bmodel     | 6.70               |
-| BM1688/clip_image_vitb32_bm1688_f16_1b.bmodel       | 13.67              |
-| BM1688/clip_image_vitb32_bm1688_f16_1b_2core.bmodel | 18.82              |
-| CV186X/clip_image_vitb32_cv186x_f16_1b.bmodel       | 25.79              |
+|   测试平台  | 测试clip_image_vitb32模型                           | calculate time(ms) |
+| ----------- | --------------------------------------------------- | ------------------ |
+|   SE7-32    | BM1684X/clip_image_vitb32_bm1684x_f16_1b.bmodel     | 4.13               |
+|   SE9-16    | BM1688/clip_image_vitb32_bm1688_f16_1b.bmodel       | 17.14              |
+|   SE9-16    | BM1688/clip_image_vitb32_bm1688_f16_1b_2core.bmodel | 15.50              |
+|   SE9-8     | CV186X/clip_image_vitb32_cv186x_f16_1b.bmodel       | 17.55              |
 
-| 测试clip_text_vitb32模型                           | calculate time(ms) |
-| -------------------------------------------------- | ------------------ |
-| BM1684X/clip_text_vitb32_bm1684x_f16_1b.bmodel     | 4.92               |
-| BM1688/clip_text_vitb32_bm1688_f16_1b.bmodel       | 13.71              |
-| BM1688/clip_text_vitb32_bm1688_f16_1b_2core.bmodel | 14.08              |
-| CV186X/clip_text_vitb32_cv186x_f16_1b.bmodel       | 17.61              |
-
+|   测试平台  | 测试clip_text_vitb32模型                           | calculate time(ms) |
+| ----------- | -------------------------------------------------- | ------------------ |
+|   SE7-32    | BM1684X/clip_text_vitb32_bm1684x_f16_1b.bmodel     | 1.83               |
+|   SE9-16    | BM1688/clip_text_vitb32_bm1688_f16_1b.bmodel       | 6.91              |
+|   SE9-16    | BM1688/clip_text_vitb32_bm1688_f16_1b_2core.bmodel | 6.89              |
+|   SE9-8     | CV186X/clip_text_vitb32_cv186x_f16_1b.bmodel       | 7.61              |
 
 > **测试说明**：
 > 1. 性能测试结果具有一定的波动性；
@@ -120,16 +124,19 @@ bmrt_test --bmodel models/BM1684X/clip_image_vitb32_bm1684x_f16_1b.bmodel
 > 3. SoC和PCIe的测试结果基本一致。
 
 ### 6.2 程序运行性能
-测试图片`/datasets/CLIP.png`，测试模型为clip_image_vitb32_\<target\>_f16_1b.bmodel，clip_text_vitb32_\<target\>_f16_1b.bmodel
+测试图片`/datasets/CLIP.png`，测试文本为`a diagram,a dog,a cat`，测试模型为`clip_image_vitb32_{target}_f16_1b.bmodel`，`clip_text_vitb32_{target}_f16_1b.bmodel`,其中SE9-16使用双核模型。
 
 测试结果如下，测试结果有一定波动性，取稳定后的性能数据（时间单位为ms）：
 
 | 测试平台 | 测试程序            | Preprocess Time | Image Encoding Time | Text Encoding Time |
 | -------- | ------------------- | --------------- | ------------------- | ------------------ |
-| SE7-32   | zeroshot_predict.py | 12.17           | 9.63                | 18.90              |
-| SE9-16   | zeroshot_predict.py | 16.92           | 25.04               | 49.61              |
-| SE9-8    | zeroshot_predict.py | 17.09           | 30.59               | 59.56              |
-| SRM1-20  | zeroshot_predict.py | 17.07           | 11.46               | 39.29              |
+| SE7-32   | zeroshot_predict.py | 8.55           | 7.14                | 2.96               |
+| SE7-32   | clip_opencv.soc | 5.67           | 4.57                | 2.59               |
+| SE9-16   | zeroshot_predict.py | 13.05           | 20.02               | 9.73              |
+| SE9-16   | clip_opencv.soc | 9.27           | 16.08               | 8.90              |
+| SE9-8    | zeroshot_predict.py | 11.74           | 21.92               | 8.36              |
+| SE9-8    | clip_opencv.soc | 9.37           | 17.94               | 9.61             |
+| SRM1-20  | zeroshot_predict.py | 17.07           | 11.46               | 13.10              |
 
 
 > **测试说明**：

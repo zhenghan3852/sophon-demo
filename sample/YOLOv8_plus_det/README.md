@@ -185,7 +185,7 @@ models/
 
 ​上述脚本会在`models/BM1684X`等文件夹下生成转换好的INT8 BModel。
 
-注：这里用到了混合精度量化，需要将一些层设为敏感层，相应的qtable在此前`download.sh`下载的`models/onnx`文件夹里。如果您需要量化自己微调过的模型，可以参考[量化指南](../../docs/Calibration_Guide.md#13-特定模型优化技巧)中的方法，从我们提供的qtable倒推出自己模型需要的qtable。
+注：这里用到了混合精度量化，需要将一些层设为敏感层，相应的qtable在此前`download.sh`下载的`models/onnx`文件夹里。如果您需要量化自己微调过的模型，可以参考[量化指南](../../docs/Calibration_Guide.md#13-特定模型优化技巧)中的方法，从我们提供的qtable倒推出自己模型需要的qtable。BM1684不支持F16混合精度，如果您使用BM1684系列产品，您需要把qtable中的F16层更改为F32。
 
 ## 4. 例程测试
 - [C++例程](./cpp/README.md)
@@ -198,7 +198,7 @@ models/
 然后，使用`tools`目录下的`eval_coco.py`脚本，将测试生成的json文件与测试集标签json文件进行对比，计算出目标检测的评价指标，命令如下：
 ```bash
 # 安装pycocotools，若已安装请跳过
-pip3 install pycocotools
+pip3 install pycocotools==2.0.8
 # 请根据实际情况修改程序路径和json文件路径
 python3 tools/eval_coco.py --gt_path datasets/coco/instances_val2017_1000.json --result_json results/yolov8s_fp32_1b.bmodel_val2017_1000_bmcv_python_result.json
 ```
@@ -206,108 +206,110 @@ python3 tools/eval_coco.py --gt_path datasets/coco/instances_val2017_1000.json -
 在coco2017 val数据集上，精度测试结果如下：
 |   测试平台    |      测试程序     |      测试模型          |AP@IoU=0.5:0.95|AP@IoU=0.5|
 | ------------ | ---------------- | ---------------------- | ------------- | -------- |
-|   SE7-32    |  yolov8_bmcv.py   |      yolov8s_fp32_1b.bmodel       | 0.447 | 0.447 |
-|   SE7-32    |  yolov8_bmcv.py   |      yolov8s_fp16_1b.bmodel       | 0.447 | 0.447 |
-|   SE7-32    |  yolov8_bmcv.py   |      yolov8s_int8_1b.bmodel       | 0.442 | 0.442 |
-|   SE7-32    |  yolov8_bmcv.py   |      yolov8s_int8_4b.bmodel       | 0.442 | 0.442 |
-|   SE7-32    |  yolov8_bmcv.soc  |      yolov8s_fp32_1b.bmodel       | 0.453 | 0.453 |
-|   SE7-32    |  yolov8_bmcv.soc  |      yolov8s_fp16_1b.bmodel       | 0.453 | 0.453 |
-|   SE7-32    |  yolov8_bmcv.soc  |      yolov8s_int8_1b.bmodel       | 0.449 | 0.449 |
-|   SE7-32    |  yolov8_bmcv.soc  |      yolov8s_int8_4b.bmodel       | 0.449 | 0.449 |
-|   SE7-32    |  yolov8_bmcv.py   |      yolov9s_fp32_1b.bmodel       | 0.464 | 0.464 |
-|   SE7-32    |  yolov8_bmcv.py   |      yolov9s_fp16_1b.bmodel       | 0.463 | 0.463 |
-|   SE7-32    |  yolov8_bmcv.py   |      yolov9s_int8_1b.bmodel       | 0.455 | 0.455 |
-|   SE7-32    |  yolov8_bmcv.py   |      yolov9s_int8_4b.bmodel       | 0.455 | 0.455 |
-|   SE7-32    |  yolov8_bmcv.soc  |      yolov9s_fp32_1b.bmodel       | 0.468 | 0.468 |
-|   SE7-32    |  yolov8_bmcv.soc  |      yolov9s_fp16_1b.bmodel       | 0.469 | 0.469 |
-|   SE7-32    |  yolov8_bmcv.soc  |      yolov9s_int8_1b.bmodel       | 0.460 | 0.460 |
-|   SE7-32    |  yolov8_bmcv.soc  |      yolov9s_int8_4b.bmodel       | 0.460 | 0.460 |
-|   SE7-32    |  yolov8_bmcv.py   |      yolov11s_fp32_1b.bmodel      | 0.471 | 0.471 |
-|   SE7-32    |  yolov8_bmcv.py   |      yolov11s_fp16_1b.bmodel      | 0.470 | 0.470 |
-|   SE7-32    |  yolov8_bmcv.py   |      yolov11s_int8_1b.bmodel      | 0.462 | 0.462 |
-|   SE7-32    |  yolov8_bmcv.py   |      yolov11s_int8_4b.bmodel      | 0.462 | 0.462 |
-|   SE7-32    |  yolov8_bmcv.soc  |      yolov11s_fp32_1b.bmodel      | 0.474 | 0.474 |
-|   SE7-32    |  yolov8_bmcv.soc  |      yolov11s_fp16_1b.bmodel      | 0.475 | 0.475 |
-|   SE7-32    |  yolov8_bmcv.soc  |      yolov11s_int8_1b.bmodel      | 0.468 | 0.468 |
-|   SE7-32    |  yolov8_bmcv.soc  |      yolov11s_int8_4b.bmodel      | 0.468 | 0.468 |
-|   SE7-32    |  yolov8_bmcv.py   |      yolov12s_fp32_1b.bmodel      | 0.474 | 0.474 |
-|   SE7-32    |  yolov8_bmcv.soc  |      yolov12s_fp32_1b.bmodel      | 0.481 | 0.481 |
-|   SE7-32    |  yolov8_bmcv.py   |      yolov12s_fp16_1b.bmodel      | 0.474 | 0.474 |
-|   SE7-32    |  yolov8_bmcv.soc  |      yolov12s_fp16_1b.bmodel      | 0.481 | 0.481 |
-|   SE7-32    |  yolov8_bmcv.py   |      yolov12s_int8_1b.bmodel      | 0.468 | 0.468 |
-|   SE7-32    |  yolov8_bmcv.soc  |      yolov12s_int8_1b.bmodel      | 0.473 | 0.473 |
-|   SE7-32    |  yolov8_bmcv.py   |      yolov12s_int8_4b.bmodel      | 0.468 | 0.468 |
-|   SE7-32    |  yolov8_bmcv.soc  |      yolov12s_int8_4b.bmodel      | 0.473 | 0.473 |
-|   SE9-16    |  yolov8_bmcv.py   |      yolov8s_fp32_1b.bmodel       | 0.447 | 0.447 |
-|   SE9-16    |  yolov8_bmcv.py   |      yolov8s_fp16_1b.bmodel       | 0.447 | 0.447 |
-|   SE9-16    |  yolov8_bmcv.py   |      yolov8s_int8_1b.bmodel       | 0.442 | 0.442 |
-|   SE9-16    |  yolov8_bmcv.py   |      yolov8s_int8_4b.bmodel       | 0.442 | 0.442 |
-|   SE9-16    |  yolov8_bmcv.soc  |      yolov8s_fp32_1b.bmodel       | 0.453 | 0.453 |
-|   SE9-16    |  yolov8_bmcv.soc  |      yolov8s_fp16_1b.bmodel       | 0.453 | 0.453 |
-|   SE9-16    |  yolov8_bmcv.soc  |      yolov8s_int8_1b.bmodel       | 0.450 | 0.450 |
-|   SE9-16    |  yolov8_bmcv.soc  |      yolov8s_int8_4b.bmodel       | 0.450 | 0.450 |
-|   SE9-16    |  yolov8_bmcv.py   |   yolov8s_int8_4b_2core.bmodel    | 0.442 | 0.442 |
-|   SE9-16    |  yolov8_bmcv.soc  |   yolov8s_int8_4b_2core.bmodel    | 0.450 | 0.450 |
-|   SE9-16    |  yolov8_bmcv.py   |      yolov9s_fp32_1b.bmodel       | 0.465 | 0.465 |
-|   SE9-16    |  yolov8_bmcv.py   |      yolov9s_fp16_1b.bmodel       | 0.463 | 0.463 |
-|   SE9-16    |  yolov8_bmcv.py   |      yolov9s_int8_1b.bmodel       | 0.454 | 0.454 |
-|   SE9-16    |  yolov8_bmcv.py   |      yolov9s_int8_4b.bmodel       | 0.454 | 0.454 |
-|   SE9-16    |  yolov8_bmcv.soc  |      yolov9s_fp32_1b.bmodel       | 0.469 | 0.469 |
-|   SE9-16    |  yolov8_bmcv.soc  |      yolov9s_fp16_1b.bmodel       | 0.469 | 0.469 |
-|   SE9-16    |  yolov8_bmcv.soc  |      yolov9s_int8_1b.bmodel       | 0.459 | 0.459 |
-|   SE9-16    |  yolov8_bmcv.soc  |      yolov9s_int8_4b.bmodel       | 0.459 | 0.459 |
-|   SE9-16    |  yolov8_bmcv.py   |   yolov9s_int8_4b_2core.bmodel    | 0.454 | 0.454 |
-|   SE9-16    |  yolov8_bmcv.soc  |   yolov9s_int8_4b_2core.bmodel    | 0.459 | 0.459 |
-|   SE9-16    |  yolov8_bmcv.py   |      yolov11s_fp32_1b.bmodel      | 0.471 | 0.471 |
-|   SE9-16    |  yolov8_bmcv.py   |      yolov11s_fp16_1b.bmodel      | 0.471 | 0.471 |
-|   SE9-16    |  yolov8_bmcv.py   |      yolov11s_int8_1b.bmodel      | 0.463 | 0.463 |
-|   SE9-16    |  yolov8_bmcv.py   |      yolov11s_int8_4b.bmodel      | 0.463 | 0.463 |
-|   SE9-16    |  yolov8_bmcv.soc  |      yolov11s_fp32_1b.bmodel      | 0.476 | 0.476 |
-|   SE9-16    |  yolov8_bmcv.soc  |      yolov11s_fp16_1b.bmodel      | 0.475 | 0.475 |
-|   SE9-16    |  yolov8_bmcv.soc  |      yolov11s_int8_1b.bmodel      | 0.468 | 0.468 |
-|   SE9-16    |  yolov8_bmcv.soc  |      yolov11s_int8_4b.bmodel      | 0.468 | 0.468 |
-|   SE9-16    |  yolov8_bmcv.py   |   yolov11s_int8_4b_2core.bmodel   | 0.463 | 0.463 |
-|   SE9-16    |  yolov8_bmcv.soc  |   yolov11s_int8_4b_2core.bmodel   | 0.468 | 0.468 |
-|   SE9-16    |  yolov8_bmcv.py   |      yolov12s_fp32_1b.bmodel      | 0.474 | 0.474 |
-|   SE9-16    |  yolov8_bmcv.soc  |      yolov12s_fp32_1b.bmodel      | 0.480 | 0.480 |
-|   SE9-16    |  yolov8_bmcv.py   |      yolov12s_fp16_1b.bmodel      | 0.474 | 0.474 |
-|   SE9-16    |  yolov8_bmcv.soc  |      yolov12s_fp16_1b.bmodel      | 0.480 | 0.480 |
-|   SE9-16    |  yolov8_bmcv.py   |      yolov12s_int8_1b.bmodel      | 0.466 | 0.466 |
-|   SE9-16    |  yolov8_bmcv.soc  |      yolov12s_int8_1b.bmodel      | 0.472 | 0.472 |
-|   SE9-16    |  yolov8_bmcv.py   |      yolov12s_int8_4b.bmodel      | 0.466 | 0.466 |
-|   SE9-16    |  yolov8_bmcv.soc  |      yolov12s_int8_4b.bmodel      | 0.472 | 0.472 |
-|    SE9-8    |  yolov8_bmcv.py   |      yolov8s_fp32_1b.bmodel       | 0.447 | 0.447 |
-|    SE9-8    |  yolov8_bmcv.py   |      yolov8s_fp16_1b.bmodel       | 0.447 | 0.447 |
-|    SE9-8    |  yolov8_bmcv.py   |      yolov8s_int8_1b.bmodel       | 0.442 | 0.442 |
-|    SE9-8    |  yolov8_bmcv.py   |      yolov8s_int8_4b.bmodel       | 0.442 | 0.442 |
-|    SE9-8    |  yolov8_bmcv.soc  |      yolov8s_fp32_1b.bmodel       | 0.453 | 0.453 |
-|    SE9-8    |  yolov8_bmcv.soc  |      yolov8s_fp16_1b.bmodel       | 0.453 | 0.453 |
-|    SE9-8    |  yolov8_bmcv.soc  |      yolov8s_int8_1b.bmodel       | 0.450 | 0.450 |
-|    SE9-8    |  yolov8_bmcv.soc  |      yolov8s_int8_4b.bmodel       | 0.450 | 0.450 |
-|    SE9-8    |  yolov8_bmcv.py   |      yolov9s_fp32_1b.bmodel       | 0.465 | 0.465 |
-|    SE9-8    |  yolov8_bmcv.py   |      yolov9s_fp16_1b.bmodel       | 0.463 | 0.463 |
-|    SE9-8    |  yolov8_bmcv.py   |      yolov9s_int8_1b.bmodel       | 0.454 | 0.454 |
-|    SE9-8    |  yolov8_bmcv.py   |      yolov9s_int8_4b.bmodel       | 0.454 | 0.454 |
-|    SE9-8    |  yolov8_bmcv.soc  |      yolov9s_fp32_1b.bmodel       | 0.469 | 0.469 |
-|    SE9-8    |  yolov8_bmcv.soc  |      yolov9s_fp16_1b.bmodel       | 0.469 | 0.469 |
-|    SE9-8    |  yolov8_bmcv.soc  |      yolov9s_int8_1b.bmodel       | 0.459 | 0.459 |
-|    SE9-8    |  yolov8_bmcv.soc  |      yolov9s_int8_4b.bmodel       | 0.459 | 0.459 |
-|    SE9-8    |  yolov8_bmcv.py   |      yolov11s_fp32_1b.bmodel      | 0.471 | 0.471 |
-|    SE9-8    |  yolov8_bmcv.py   |      yolov11s_fp16_1b.bmodel      | 0.471 | 0.471 |
-|    SE9-8    |  yolov8_bmcv.py   |      yolov11s_int8_1b.bmodel      | 0.463 | 0.463 |
-|    SE9-8    |  yolov8_bmcv.py   |      yolov11s_int8_4b.bmodel      | 0.463 | 0.463 |
-|    SE9-8    |  yolov8_bmcv.soc  |      yolov11s_fp32_1b.bmodel      | 0.476 | 0.476 |
-|    SE9-8    |  yolov8_bmcv.soc  |      yolov11s_fp16_1b.bmodel      | 0.475 | 0.475 |
-|    SE9-8    |  yolov8_bmcv.soc  |      yolov11s_int8_1b.bmodel      | 0.468 | 0.468 |
-|    SE9-8    |  yolov8_bmcv.soc  |      yolov11s_int8_4b.bmodel      | 0.468 | 0.468 |
-|    SE9-8    |  yolov8_bmcv.py   |      yolov12s_fp32_1b.bmodel      | 0.474 | 0.474 |
-|    SE9-8    |  yolov8_bmcv.soc  |      yolov12s_fp32_1b.bmodel      | 0.480 | 0.480 |
-|    SE9-8    |  yolov8_bmcv.py   |      yolov12s_fp16_1b.bmodel      | 0.474 | 0.474 |
-|    SE9-8    |  yolov8_bmcv.soc  |      yolov12s_fp16_1b.bmodel      | 0.480 | 0.480 |
-|    SE9-8    |  yolov8_bmcv.py   |      yolov12s_int8_1b.bmodel      | 0.466 | 0.466 |
-|    SE9-8    |  yolov8_bmcv.soc  |      yolov12s_int8_1b.bmodel      | 0.472 | 0.472 |
-|    SE9-8    |  yolov8_bmcv.py   |      yolov12s_int8_4b.bmodel      | 0.466 | 0.466 |
-|    SE9-8    |  yolov8_bmcv.soc  |      yolov12s_int8_4b.bmodel      | 0.472 | 0.472 |
+|   SE7-32    |  yolov8_bmcv.py   |      yolov8s_fp32_1b.bmodel       | 0.447 | 0.610 |
+|   SE7-32    |  yolov8_bmcv.soc  |      yolov8s_fp32_1b.bmodel       | 0.453 | 0.620 |
+|   SE7-32    |  yolov8_bmcv.py   |      yolov8s_fp16_1b.bmodel       | 0.447 | 0.610 |
+|   SE7-32    |  yolov8_bmcv.soc  |      yolov8s_fp16_1b.bmodel       | 0.453 | 0.620 |
+|   SE7-32    |  yolov8_bmcv.py   |      yolov8s_int8_1b.bmodel       | 0.442 | 0.607 |
+|   SE7-32    |  yolov8_bmcv.soc  |      yolov8s_int8_1b.bmodel       | 0.449 | 0.617 |
+|   SE7-32    |  yolov8_bmcv.py   |      yolov8s_int8_4b.bmodel       | 0.442 | 0.607 |
+|   SE7-32    |  yolov8_bmcv.soc  |      yolov8s_int8_4b.bmodel       | 0.449 | 0.617 |
+|   SE7-32    |  yolov8_bmcv.py   |      yolov9s_fp32_1b.bmodel       | 0.464 | 0.630 |
+|   SE7-32    |  yolov8_bmcv.soc  |      yolov9s_fp32_1b.bmodel       | 0.468 | 0.636 |
+|   SE7-32    |  yolov8_bmcv.py   |      yolov9s_fp16_1b.bmodel       | 0.463 | 0.630 |
+|   SE7-32    |  yolov8_bmcv.soc  |      yolov9s_fp16_1b.bmodel       | 0.469 | 0.637 |
+|   SE7-32    |  yolov8_bmcv.py   |      yolov9s_int8_1b.bmodel       | 0.455 | 0.624 |
+|   SE7-32    |  yolov8_bmcv.soc  |      yolov9s_int8_1b.bmodel       | 0.460 | 0.632 |
+|   SE7-32    |  yolov8_bmcv.py   |      yolov9s_int8_4b.bmodel       | 0.455 | 0.624 |
+|   SE7-32    |  yolov8_bmcv.soc  |      yolov9s_int8_4b.bmodel       | 0.460 | 0.632 |
+|   SE7-32    |  yolov8_bmcv.py   |      yolov11s_fp32_1b.bmodel      | 0.471 | 0.638 |
+|   SE7-32    |  yolov8_bmcv.soc  |      yolov11s_fp32_1b.bmodel      | 0.474 | 0.645 |
+|   SE7-32    |  yolov8_bmcv.py   |      yolov11s_fp16_1b.bmodel      | 0.470 | 0.638 |
+|   SE7-32    |  yolov8_bmcv.soc  |      yolov11s_fp16_1b.bmodel      | 0.475 | 0.645 |
+|   SE7-32    |  yolov8_bmcv.py   |      yolov11s_int8_1b.bmodel      | 0.462 | 0.628 |
+|   SE7-32    |  yolov8_bmcv.soc  |      yolov11s_int8_1b.bmodel      | 0.468 | 0.638 |
+|   SE7-32    |  yolov8_bmcv.py   |      yolov11s_int8_4b.bmodel      | 0.462 | 0.628 |
+|   SE7-32    |  yolov8_bmcv.soc  |      yolov11s_int8_4b.bmodel      | 0.468 | 0.638 |
+|   SE7-32    |  yolov8_bmcv.py   |      yolov12s_fp32_1b.bmodel      | 0.474 | 0.640 |
+|   SE7-32    |  yolov8_bmcv.soc  |      yolov12s_fp32_1b.bmodel      | 0.481 | 0.650 |
+|   SE7-32    |  yolov8_bmcv.py   |      yolov12s_fp16_1b.bmodel      | 0.474 | 0.640 |
+|   SE7-32    |  yolov8_bmcv.soc  |      yolov12s_fp16_1b.bmodel      | 0.481 | 0.651 |
+|   SE7-32    |  yolov8_bmcv.py   |      yolov12s_int8_1b.bmodel      | 0.468 | 0.633 |
+|   SE7-32    |  yolov8_bmcv.soc  |      yolov12s_int8_1b.bmodel      | 0.473 | 0.642 |
+|   SE7-32    |  yolov8_bmcv.py   |      yolov12s_int8_4b.bmodel      | 0.468 | 0.633 |
+|   SE7-32    |  yolov8_bmcv.soc  |      yolov12s_int8_4b.bmodel      | 0.473 | 0.642 |
+|   SE9-16    |  yolov8_bmcv.py   |      yolov8s_fp32_1b.bmodel       | 0.447 | 0.610 |
+|   SE9-16    |  yolov8_bmcv.soc  |      yolov8s_fp32_1b.bmodel       | 0.453 | 0.620 |
+|   SE9-16    |  yolov8_bmcv.py   |      yolov8s_fp16_1b.bmodel       | 0.447 | 0.610 |
+|   SE9-16    |  yolov8_bmcv.soc  |      yolov8s_fp16_1b.bmodel       | 0.453 | 0.620 |
+|   SE9-16    |  yolov8_bmcv.py   |      yolov8s_int8_1b.bmodel       | 0.442 | 0.607 |
+|   SE9-16    |  yolov8_bmcv.soc  |      yolov8s_int8_1b.bmodel       | 0.450 | 0.618 |
+|   SE9-16    |  yolov8_bmcv.py   |      yolov8s_int8_4b.bmodel       | 0.442 | 0.607 |
+|   SE9-16    |  yolov8_bmcv.soc  |      yolov8s_int8_4b.bmodel       | 0.450 | 0.618 |
+|   SE9-16    |  yolov8_bmcv.py   |      yolov8s_int8_4b_2core.bmodel | 0.442 | 0.607 |
+|   SE9-16    |  yolov8_bmcv.soc  |      yolov8s_int8_4b_2core.bmodel | 0.450 | 0.618 |
+|   SE9-16    |  yolov8_bmcv.py   |      yolov9s_fp32_1b.bmodel       | 0.465 | 0.630 |
+|   SE9-16    |  yolov8_bmcv.soc  |      yolov9s_fp32_1b.bmodel       | 0.469 | 0.637 |
+|   SE9-16    |  yolov8_bmcv.py   |      yolov9s_fp16_1b.bmodel       | 0.463 | 0.630 |
+|   SE9-16    |  yolov8_bmcv.soc  |      yolov9s_fp16_1b.bmodel       | 0.469 | 0.637 |
+|   SE9-16    |  yolov8_bmcv.py   |      yolov9s_int8_1b.bmodel       | 0.454 | 0.623 |
+|   SE9-16    |  yolov8_bmcv.soc  |      yolov9s_int8_1b.bmodel       | 0.459 | 0.631 |
+|   SE9-16    |  yolov8_bmcv.py   |      yolov9s_int8_4b.bmodel       | 0.454 | 0.623 |
+|   SE9-16    |  yolov8_bmcv.soc  |      yolov9s_int8_4b.bmodel       | 0.459 | 0.631 |
+|   SE9-16    |  yolov8_bmcv.py   |      yolov9s_int8_4b_2core.bmodel | 0.454 | 0.623 |
+|   SE9-16    |  yolov8_bmcv.soc  |      yolov9s_int8_4b_2core.bmodel | 0.459 | 0.631 |
+|   SE9-16    |  yolov8_bmcv.py   |      yolov11s_fp32_1b.bmodel      | 0.471 | 0.638 |
+|   SE9-16    |  yolov8_bmcv.soc  |      yolov11s_fp32_1b.bmodel      | 0.476 | 0.645 |
+|   SE9-16    |  yolov8_bmcv.py   |      yolov11s_fp16_1b.bmodel      | 0.471 | 0.638 |
+|   SE9-16    |  yolov8_bmcv.soc  |      yolov11s_fp16_1b.bmodel      | 0.475 | 0.645 |
+|   SE9-16    |  yolov8_bmcv.py   |      yolov11s_int8_1b.bmodel      | 0.463 | 0.629 |
+|   SE9-16    |  yolov8_bmcv.soc  |      yolov11s_int8_1b.bmodel      | 0.468 | 0.638 |
+|   SE9-16    |  yolov8_bmcv.py   |      yolov11s_int8_4b.bmodel      | 0.463 | 0.629 |
+|   SE9-16    |  yolov8_bmcv.soc  |      yolov11s_int8_4b.bmodel      | 0.468 | 0.638 |
+|   SE9-16    |  yolov8_bmcv.py   |      yolov11s_int8_4b_2core.bmodel| 0.463 | 0.629 |
+|   SE9-16    |  yolov8_bmcv.soc  |      yolov11s_int8_4b_2core.bmodel| 0.468 | 0.638 |
+|   SE9-16    |  yolov8_bmcv.py   |      yolov12s_fp32_1b.bmodel      | 0.474 | 0.640 |
+|   SE9-16    |  yolov8_bmcv.soc  |      yolov12s_fp32_1b.bmodel      | 0.480 | 0.650 |
+|   SE9-16    |  yolov8_bmcv.py   |      yolov12s_fp16_1b.bmodel      | 0.474 | 0.640 |
+|   SE9-16    |  yolov8_bmcv.soc  |      yolov12s_fp16_1b.bmodel      | 0.480 | 0.651 |
+|   SE9-16    |  yolov8_bmcv.py   |      yolov12s_int8_1b.bmodel      | 0.466 | 0.631 |
+|   SE9-16    |  yolov8_bmcv.soc  |      yolov12s_int8_1b.bmodel      | 0.472 | 0.641 |
+|   SE9-16    |  yolov8_bmcv.py   |      yolov12s_int8_4b.bmodel      | 0.466 | 0.631 |
+|   SE9-16    |  yolov8_bmcv.soc  |      yolov12s_int8_4b.bmodel      | 0.472 | 0.641 |
+|   SE9-16    |  yolov8_bmcv.py   |      yolov12s_int8_4b_core.bmodel | 0.466 | 0.631 |
+|   SE9-16    |  yolov8_bmcv.soc  |      yolov12s_int8_4b_core.bmodel | 0.472 | 0.641 |
+|    SE9-8    |  yolov8_bmcv.py   |      yolov8s_fp32_1b.bmodel       | 0.447 | 0.610 |
+|    SE9-8    |  yolov8_bmcv.soc  |      yolov8s_fp32_1b.bmodel       | 0.453 | 0.620 |
+|    SE9-8    |  yolov8_bmcv.py   |      yolov8s_fp16_1b.bmodel       | 0.447 | 0.610 |
+|    SE9-8    |  yolov8_bmcv.soc  |      yolov8s_fp16_1b.bmodel       | 0.453 | 0.620 |
+|    SE9-8    |  yolov8_bmcv.py   |      yolov8s_int8_1b.bmodel       | 0.442 | 0.607 |
+|    SE9-8    |  yolov8_bmcv.soc  |      yolov8s_int8_1b.bmodel       | 0.450 | 0.618 |
+|    SE9-8    |  yolov8_bmcv.py   |      yolov8s_int8_4b.bmodel       | 0.442 | 0.607 |
+|    SE9-8    |  yolov8_bmcv.soc  |      yolov8s_int8_4b.bmodel       | 0.450 | 0.618 |
+|    SE9-8    |  yolov8_bmcv.py   |      yolov9s_fp32_1b.bmodel       | 0.465 | 0.630 |
+|    SE9-8    |  yolov8_bmcv.soc  |      yolov9s_fp32_1b.bmodel       | 0.469 | 0.637 |
+|    SE9-8    |  yolov8_bmcv.py   |      yolov9s_fp16_1b.bmodel       | 0.463 | 0.630 |
+|    SE9-8    |  yolov8_bmcv.soc  |      yolov9s_fp16_1b.bmodel       | 0.469 | 0.637 |
+|    SE9-8    |  yolov8_bmcv.py   |      yolov9s_int8_1b.bmodel       | 0.454 | 0.623 |
+|    SE9-8    |  yolov8_bmcv.soc  |      yolov9s_int8_1b.bmodel       | 0.459 | 0.631 |
+|    SE9-8    |  yolov8_bmcv.py   |      yolov9s_int8_4b.bmodel       | 0.454 | 0.623 |
+|    SE9-8    |  yolov8_bmcv.soc  |      yolov9s_int8_4b.bmodel       | 0.459 | 0.631 |
+|    SE9-8    |  yolov8_bmcv.py   |      yolov11s_fp32_1b.bmodel      | 0.471 | 0.638 |
+|    SE9-8    |  yolov8_bmcv.soc  |      yolov11s_fp32_1b.bmodel      | 0.476 | 0.645 |
+|    SE9-8    |  yolov8_bmcv.py   |      yolov11s_fp16_1b.bmodel      | 0.471 | 0.638 |
+|    SE9-8    |  yolov8_bmcv.soc  |      yolov11s_fp16_1b.bmodel      | 0.475 | 0.645 |
+|    SE9-8    |  yolov8_bmcv.py   |      yolov11s_int8_1b.bmodel      | 0.463 | 0.629 |
+|    SE9-8    |  yolov8_bmcv.soc  |      yolov11s_int8_1b.bmodel      | 0.468 | 0.638 |
+|    SE9-8    |  yolov8_bmcv.py   |      yolov11s_int8_4b.bmodel      | 0.463 | 0.629 |
+|    SE9-8    |  yolov8_bmcv.soc  |      yolov11s_int8_4b.bmodel      | 0.468 | 0.638 |
+|    SE9-8    |  yolov8_bmcv.py   |      yolov12s_fp32_1b.bmodel      | 0.474 | 0.640 |
+|    SE9-8    |  yolov8_bmcv.soc  |      yolov12s_fp32_1b.bmodel      | 0.480 | 0.650 |
+|    SE9-8    |  yolov8_bmcv.py   |      yolov12s_fp16_1b.bmodel      | 0.474 | 0.640 |
+|    SE9-8    |  yolov8_bmcv.soc  |      yolov12s_fp16_1b.bmodel      | 0.480 | 0.651 |
+|    SE9-8    |  yolov8_bmcv.py   |      yolov12s_int8_1b.bmodel      | 0.466 | 0.631 |
+|    SE9-8    |  yolov8_bmcv.soc  |      yolov12s_int8_1b.bmodel      | 0.472 | 0.641 |
+|    SE9-8    |  yolov8_bmcv.py   |      yolov12s_int8_4b.bmodel      | 0.466 | 0.631 |
+|    SE9-8    |  yolov8_bmcv.soc  |      yolov12s_int8_4b.bmodel      | 0.472 | 0.641 |
 
 > **测试说明**：  
 > 1. 由于sdk版本之间可能存在差异，实际运行结果与本表有<0.01的精度误差是正常的；
@@ -324,56 +326,56 @@ bmrt_test --bmodel models/BM1684X/yolov8s_fp32_1b.bmodel
 测试结果中的`calculate time`就是模型推理的时间，多batch size模型应当除以相应的batch size才是每张图片的理论推理时间。
 测试各个模型的理论推理时间，结果如下：
 
-|              测试模型           | calculate time(ms) |
-| -------------------------------| ----------------- |
-| BM1684X/yolov8s_fp32_1b.bmodel     |          29.29  |
-| BM1684X/yolov8s_fp16_1b.bmodel     |           5.59  |
-| BM1684X/yolov8s_int8_1b.bmodel     |           2.92  |
-| BM1684X/yolov8s_int8_4b.bmodel     |           2.80  |
-| BM1684X/yolov9s_fp32_1b.bmodel     |          33.51  |
-| BM1684X/yolov9s_fp16_1b.bmodel     |           7.41  |
-| BM1684X/yolov9s_int8_1b.bmodel     |           4.83  |
-| BM1684X/yolov9s_int8_4b.bmodel     |           4.59  |
-| BM1684X/yolov11s_fp32_1b.bmodel    |          24.62  |
-| BM1684X/yolov11s_fp16_1b.bmodel    |           5.88  |
-| BM1684X/yolov11s_int8_1b.bmodel    |           3.27  |
-| BM1684X/yolov11s_int8_4b.bmodel    |           3.01  |
-| BM1684X/yolov12s_fp32_1b.bmodel    |          54.50  |
-| BM1684X/yolov12s_fp16_1b.bmodel    |          26.90  |
-| BM1684X/yolov12s_int8_1b.bmodel    |          22.33  |
-| BM1684X/yolov12s_int8_4b.bmodel    |          21.56  |
-| BM1688/yolov8s_fp32_1b.bmodel      |         161.70  |
-| BM1688/yolov8s_fp16_1b.bmodel      |          34.63  |
-| BM1688/yolov8s_int8_1b.bmodel      |           7.68  |
-| BM1688/yolov8s_int8_4b.bmodel      |           7.54  |
-| BM1688/yolov8s_int8_4b_2core.bmodel|           4.81  |
-| BM1688/yolov9s_fp32_1b.bmodel      |         162.37  |
-| BM1688/yolov9s_fp16_1b.bmodel      |          41.21  |
-| BM1688/yolov9s_int8_1b.bmodel      |          18.03  |
-| BM1688/yolov9s_int8_4b.bmodel      |          17.78  |
-| BM1688/yolov9s_int8_4b_2core.bmodel|          10.11  |
-| BM1688/yolov11s_fp32_1b.bmodel     |         131.64  |
-| BM1688/yolov11s_fp16_1b.bmodel     |          33.87  |
-| BM1688/yolov11s_int8_1b.bmodel     |           8.37  |
-| BM1688/yolov11s_int8_4b.bmodel     |           7.98  |
-| BM1688/yolov11s_int8_4b_2core.bmodel|           5.32  |
-| BM1688/yolov12s_fp32_1b.bmodel     |         209.90  |
-| BM1688/yolov12s_fp16_1b.bmodel     |          68.92  |
-| BM1688/yolov12s_int8_1b.bmodel     |          59.99  |
-| BM1688/yolov12s_int8_4b.bmodel     |          60.16  |
-| BM1688/yolov12s_int8_4b_2core.bmodel|          37.70  |
-| CV186X/yolov8s_fp32_1b.bmodel      |         165.35  |
-| CV186X/yolov8s_fp16_1b.bmodel      |          36.80  |
-| CV186X/yolov8s_int8_1b.bmodel      |           9.21  |
-| CV186X/yolov8s_int8_4b.bmodel      |           9.14  |
-| CV186X/yolov11s_fp32_1b.bmodel     |         135.15  |
-| CV186X/yolov11s_fp16_1b.bmodel     |          36.22  |
-| CV186X/yolov11s_int8_1b.bmodel     |          10.60  |
-| CV186X/yolov11s_int8_4b.bmodel     |          10.10  |
-| CV186X/yolov12s_fp32_1b.bmodel     |         209.44  |
-| CV186X/yolov12s_fp16_1b.bmodel     |          68.68  |
-| CV186X/yolov12s_int8_1b.bmodel     |          59.78  |
-| CV186X/yolov12s_int8_4b.bmodel     |          59.96  |
+|    测试平台  |              测试模型           | calculate time(ms) |
+| ----------- | -------------------------------| ----------------- |
+|   SE7-32    | BM1684X/yolov8s_fp32_1b.bmodel     |          29.29  |
+|   SE7-32    | BM1684X/yolov8s_fp16_1b.bmodel     |           5.59  |
+|   SE7-32    | BM1684X/yolov8s_int8_1b.bmodel     |           2.92  |
+|   SE7-32    | BM1684X/yolov8s_int8_4b.bmodel     |           2.80  |
+|   SE7-32    | BM1684X/yolov9s_fp32_1b.bmodel     |          33.51  |
+|   SE7-32    | BM1684X/yolov9s_fp16_1b.bmodel     |           7.41  |
+|   SE7-32    | BM1684X/yolov9s_int8_1b.bmodel     |           4.83  |
+|   SE7-32    | BM1684X/yolov9s_int8_4b.bmodel     |           4.59  |
+|   SE7-32    | BM1684X/yolov11s_fp32_1b.bmodel    |          24.62  |
+|   SE7-32    | BM1684X/yolov11s_fp16_1b.bmodel    |           5.88  |
+|   SE7-32    | BM1684X/yolov11s_int8_1b.bmodel    |           3.27  |
+|   SE7-32    | BM1684X/yolov11s_int8_4b.bmodel    |           3.01  |
+|   SE7-32    | BM1684X/yolov12s_fp32_1b.bmodel    |          54.50  |
+|   SE7-32    | BM1684X/yolov12s_fp16_1b.bmodel    |          26.90  |
+|   SE7-32    | BM1684X/yolov12s_int8_1b.bmodel    |          22.33  |
+|   SE7-32    | BM1684X/yolov12s_int8_4b.bmodel    |          21.56  |
+|   SE9-16    | BM1688/yolov8s_fp32_1b.bmodel      |         161.70  |
+|   SE9-16    | BM1688/yolov8s_fp16_1b.bmodel      |          34.63  |
+|   SE9-16    | BM1688/yolov8s_int8_1b.bmodel      |           7.68  |
+|   SE9-16    | BM1688/yolov8s_int8_4b.bmodel      |           7.54  |
+|   SE9-16    | BM1688/yolov8s_int8_4b_2core.bmodel|           4.81  |
+|   SE9-16    | BM1688/yolov9s_fp32_1b.bmodel      |         162.37  |
+|   SE9-16    | BM1688/yolov9s_fp16_1b.bmodel      |          41.21  |
+|   SE9-16    | BM1688/yolov9s_int8_1b.bmodel      |          18.03  |
+|   SE9-16    | BM1688/yolov9s_int8_4b.bmodel      |          17.78  |
+|   SE9-16    | BM1688/yolov9s_int8_4b_2core.bmodel|          10.11  |
+|   SE9-16    | BM1688/yolov11s_fp32_1b.bmodel     |         131.64  |
+|   SE9-16    | BM1688/yolov11s_fp16_1b.bmodel     |          33.87  |
+|   SE9-16    | BM1688/yolov11s_int8_1b.bmodel     |           8.37  |
+|   SE9-16    | BM1688/yolov11s_int8_4b.bmodel     |           7.98  |
+|   SE9-16    | BM1688/yolov11s_int8_4b_2core.bmodel|           5.32  |
+|   SE9-16    | BM1688/yolov12s_fp32_1b.bmodel     |         209.90  |
+|   SE9-16    | BM1688/yolov12s_fp16_1b.bmodel     |          68.92  |
+|   SE9-16    | BM1688/yolov12s_int8_1b.bmodel     |          59.99  |
+|   SE9-16    | BM1688/yolov12s_int8_4b.bmodel     |          60.16  |
+|   SE9-16    | BM1688/yolov12s_int8_4b_2core.bmodel|          37.70  |
+|   SE9-8    | CV186X/yolov8s_fp32_1b.bmodel      |         165.35  |
+|   SE9-8    | CV186X/yolov8s_fp16_1b.bmodel      |          36.80  |
+|   SE9-8    | CV186X/yolov8s_int8_1b.bmodel      |           9.21  |
+|   SE9-8    | CV186X/yolov8s_int8_4b.bmodel      |           9.14  |
+|   SE9-8    | CV186X/yolov11s_fp32_1b.bmodel     |         135.15  |
+|   SE9-8    | CV186X/yolov11s_fp16_1b.bmodel     |          36.22  |
+|   SE9-8    | CV186X/yolov11s_int8_1b.bmodel     |          10.60  |
+|   SE9-8    | CV186X/yolov11s_int8_4b.bmodel     |          10.10  |
+|   SE9-8    | CV186X/yolov12s_fp32_1b.bmodel     |         209.44  |
+|   SE9-8    | CV186X/yolov12s_fp16_1b.bmodel     |          68.68  |
+|   SE9-8    | CV186X/yolov12s_int8_1b.bmodel     |          59.78  |
+|   SE9-8    | CV186X/yolov12s_int8_4b.bmodel     |          59.96  |
 
 > **测试说明**：  
 1. 性能测试结果具有一定的波动性；
@@ -382,35 +384,43 @@ bmrt_test --bmodel models/BM1684X/yolov8s_fp32_1b.bmodel
 
 
 ### 6.2 程序运行性能
-参考[C++例程](cpp/README.md)或[Python例程](python/README.md)运行程序，并查看统计的解码时间、预处理时间、推理时间、后处理时间。C++例程打印的预处理时间、推理时间、后处理时间为整个batch处理的时间，需除以相应的batch size才是每张图片的处理时间。
+参考[C++例程](cpp/README.md)或[Python例程](python/README.md)运行程序，并查看统计的解码时间、预处理时间、推理时间、后处理时间。C++和Python例程打印的时间已经折算为单张图片的处理时间。
 
 在不同的测试平台上，使用不同的例程、模型测试`datasets/coco/val2017_1000`，conf_thresh=0.25，nms_thresh=0.7，性能测试结果如下：
 |    测试平台  |     测试程序      |        测试模型        |decode_time|preprocess_time|inference_time|postprocess_time| 
 | ----------- | ---------------- | ---------------------- | -------- | --------- | --------- | --------- |
-|   SE7-32    |  yolov8_bmcv.py   |      yolov8s_fp32_1b.bmodel       |      7.70       |      2.40       |      47.94      |      79.62      |
-|   SE7-32    |  yolov8_bmcv.py   |      yolov8s_fp16_1b.bmodel       |      3.39       |      2.39       |      13.71      |      79.90      |
-|   SE7-32    |  yolov8_bmcv.py   |      yolov8s_int8_1b.bmodel       |      3.38       |      2.38       |      10.34      |      77.68      |
-|   SE7-32    |  yolov8_bmcv.py   |      yolov8s_int8_4b.bmodel       |      3.01       |      2.20       |      9.22       |      73.47      |
-|   SE7-32    |  yolov8_bmcv.soc  |      yolov8s_fp32_1b.bmodel       |      2.63       |      1.35       |      42.25      |      33.24      |
-|   SE7-32    |  yolov8_bmcv.soc  |      yolov8s_fp16_1b.bmodel       |      2.63       |      1.35       |      8.12       |      34.47      |
-|   SE7-32    |  yolov8_bmcv.soc  |      yolov8s_int8_1b.bmodel       |      2.62       |      1.35       |      4.61       |      31.42      |
-|   SE7-32    |  yolov8_bmcv.soc  |      yolov8s_int8_4b.bmodel       |      2.49       |      1.30       |      4.47       |      30.96      |
-|   SE7-32    |  yolov8_bmcv.py   |      yolov9s_fp32_1b.bmodel       |      4.58       |      2.40       |     143.60      |      79.54      |
-|   SE7-32    |  yolov8_bmcv.py   |      yolov9s_fp16_1b.bmodel       |      3.34       |      2.39       |      27.87      |      86.25      |
-|   SE7-32    |  yolov8_bmcv.py   |      yolov9s_int8_1b.bmodel       |      3.35       |      2.39       |      16.29      |      97.64      |
-|   SE7-32    |  yolov8_bmcv.py   |      yolov9s_int8_4b.bmodel       |      3.01       |      2.21       |      14.99      |      93.01      |
-|   SE7-32    |  yolov8_bmcv.soc  |      yolov9s_fp32_1b.bmodel       |      2.62       |      1.36       |     137.97      |      35.07      |
-|   SE7-32    |  yolov8_bmcv.soc  |      yolov9s_fp16_1b.bmodel       |      2.62       |      1.36       |      22.21      |      34.56      |
-|   SE7-32    |  yolov8_bmcv.soc  |      yolov9s_int8_1b.bmodel       |      2.63       |      1.35       |      10.65      |      38.48      |
-|   SE7-32    |  yolov8_bmcv.soc  |      yolov9s_int8_4b.bmodel       |      2.50       |      1.30       |      10.30      |      37.94      |
-|   SE7-32    |  yolov8_bmcv.py   |      yolov12s_fp32_1b.bmodel      |      3.26       |      2.35       |      57.20      |      5.79       |
-|   SE7-32    |  yolov8_bmcv.soc  |      yolov12s_fp32_1b.bmodel      |      2.67       |      1.38       |      54.81      |      9.56       |
-|   SE7-32    |  yolov8_bmcv.py   |      yolov12s_fp16_1b.bmodel      |      3.22       |      2.34       |      29.49      |      5.77       |
-|   SE7-32    |  yolov8_bmcv.soc  |      yolov12s_fp16_1b.bmodel      |      2.67       |      1.39       |      27.11      |      9.56       |
-|   SE7-32    |  yolov8_bmcv.py   |      yolov12s_int8_1b.bmodel      |      3.19       |      2.36       |      24.96      |      5.69       |
-|   SE7-32    |  yolov8_bmcv.soc  |      yolov12s_int8_1b.bmodel      |      2.66       |      1.38       |      22.57      |      9.54       |
-|   SE7-32    |  yolov8_bmcv.py   |      yolov12s_int8_4b.bmodel      |      3.04       |      2.17       |      23.76      |      5.14       |
-|   SE7-32    |  yolov8_bmcv.soc  |      yolov12s_int8_4b.bmodel      |      2.53       |      1.31       |      21.85      |      9.50       |
+|   SE7-32    |  yolov8_bmcv.py   |      yolov8s_fp32_1b.bmodel       |      3.16       |      2.39       |      31.99      |      5.88       |
+|   SE7-32    |  yolov8_bmcv.soc  |      yolov8s_fp32_1b.bmodel       |      2.58       |      1.37       |      29.53      |      3.23       |
+|   SE7-32    |  yolov8_bmcv.py   |      yolov8s_fp16_1b.bmodel       |      3.17       |      2.40       |      8.29       |      5.93       |
+|   SE7-32    |  yolov8_bmcv.soc  |      yolov8s_fp16_1b.bmodel       |      2.59       |      1.37       |      5.82       |      3.23       |
+|   SE7-32    |  yolov8_bmcv.py   |      yolov8s_int8_1b.bmodel       |      3.20       |      2.41       |      5.63       |      5.86       |
+|   SE7-32    |  yolov8_bmcv.soc  |      yolov8s_int8_1b.bmodel       |      2.59       |      1.37       |      3.13       |      3.24       |
+|   SE7-32    |  yolov8_bmcv.py   |      yolov8s_int8_4b.bmodel       |      2.98       |      2.20       |      4.97       |      5.31       |
+|   SE7-32    |  yolov8_bmcv.soc  |      yolov8s_int8_4b.bmodel       |      2.47       |      1.31       |      3.06       |      3.22       |
+|   SE7-32    |  yolov8_bmcv.py   |      yolov9s_fp32_1b.bmodel       |      3.17       |      2.38       |      36.20      |      5.88       |
+|   SE7-32    |  yolov8_bmcv.soc  |      yolov9s_fp32_1b.bmodel       |      2.59       |      1.37       |      33.73      |      3.23       |
+|   SE7-32    |  yolov8_bmcv.py   |      yolov9s_fp16_1b.bmodel       |      3.15       |      2.40       |      10.09      |      5.87       |
+|   SE7-32    |  yolov8_bmcv.soc  |      yolov9s_fp16_1b.bmodel       |      2.59       |      1.37       |      7.65       |      3.23       |
+|   SE7-32    |  yolov8_bmcv.py   |      yolov9s_int8_1b.bmodel       |      3.16       |      2.39       |      7.47       |      5.90       |
+|   SE7-32    |  yolov8_bmcv.soc  |      yolov9s_int8_1b.bmodel       |      2.60       |      1.37       |      5.04       |      3.23       |
+|   SE7-32    |  yolov8_bmcv.py   |      yolov9s_int8_4b.bmodel       |      2.99       |      2.20       |      6.78       |      5.31       |
+|   SE7-32    |  yolov8_bmcv.soc  |      yolov9s_int8_4b.bmodel       |      2.48       |      1.32       |      4.86       |      3.21       |
+|   SE7-32    |  yolov8_bmcv.py   |      yolov11s_fp32_1b.bmodel      |      3.15       |      2.40       |      27.34      |      5.87       |
+|   SE7-32    |  yolov8_bmcv.soc  |      yolov11s_fp32_1b.bmodel      |      2.59       |      1.37       |      24.86      |      3.23       |
+|   SE7-32    |  yolov8_bmcv.py   |      yolov11s_fp16_1b.bmodel      |      3.16       |      2.39       |      8.58       |      5.88       |
+|   SE7-32    |  yolov8_bmcv.soc  |      yolov11s_fp16_1b.bmodel      |      2.60       |      1.37       |      6.12       |      3.24       |
+|   SE7-32    |  yolov8_bmcv.py   |      yolov11s_int8_1b.bmodel      |      3.16       |      2.39       |      5.94       |      5.79       |
+|   SE7-32    |  yolov8_bmcv.soc  |      yolov11s_int8_1b.bmodel      |      2.60       |      1.37       |      3.50       |      3.23       |
+|   SE7-32    |  yolov8_bmcv.py   |      yolov11s_int8_4b.bmodel      |      2.98       |      2.21       |      5.21       |      5.23       |
+|   SE7-32    |  yolov8_bmcv.soc  |      yolov11s_int8_4b.bmodel      |      2.46       |      1.32       |      3.27       |      3.21       |
+|   SE7-32    |  yolov8_bmcv.py   |      yolov12s_fp32_1b.bmodel      |      3.17       |      2.40       |      57.73      |      5.81       |
+|   SE7-32    |  yolov8_bmcv.soc  |      yolov12s_fp32_1b.bmodel      |      2.59       |      1.37       |      55.27      |      3.24       |
+|   SE7-32    |  yolov8_bmcv.py   |      yolov12s_fp16_1b.bmodel      |      3.16       |      2.40       |      29.84      |      5.79       |
+|   SE7-32    |  yolov8_bmcv.soc  |      yolov12s_fp16_1b.bmodel      |      2.59       |      1.37       |      27.38      |      3.24       |
+|   SE7-32    |  yolov8_bmcv.py   |      yolov12s_int8_1b.bmodel      |      3.16       |      2.39       |      25.26      |      5.73       |
+|   SE7-32    |  yolov8_bmcv.soc  |      yolov12s_int8_1b.bmodel      |      2.59       |      1.37       |      22.83      |      3.23       |
+|   SE7-32    |  yolov8_bmcv.py   |      yolov12s_int8_4b.bmodel      |      2.99       |      2.21       |      24.17      |      5.21       |
+|   SE7-32    |  yolov8_bmcv.soc  |      yolov12s_int8_4b.bmodel      |      2.47       |      1.32       |      22.19      |      3.22       |
 |   SE9-16    |  yolov8_bmcv.py   |      yolov8s_fp32_1b.bmodel       |      4.18       |      4.53       |     165.23      |      7.29       |
 |   SE9-16    |  yolov8_bmcv.py   |      yolov8s_fp16_1b.bmodel       |      4.20       |      4.47       |      38.08      |      7.30       |
 |   SE9-16    |  yolov8_bmcv.py   |      yolov8s_int8_1b.bmodel       |      4.21       |      4.49       |      11.08      |      7.46       |

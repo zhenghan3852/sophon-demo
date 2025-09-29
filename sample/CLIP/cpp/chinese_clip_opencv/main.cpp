@@ -17,12 +17,11 @@
 using namespace std;
 #include "tokenizer/bert_tokenizer.hpp"
 
-void get_text_features(BertTokenizer& bert_tokenizer, std::string label, std::vector<int>& ids) {
-    size_t max_token_id = 77;
-    ids = bert_tokenizer.encode(label, max_token_id, true, true);
+void get_text_features(BertTokenizer& bert_tokenizer, std::string label, std::vector<int>& ids, size_t max_token_len) {
+    ids = bert_tokenizer.encode(label, max_token_len, true, true);
 }
 
-void process_images(const std::vector<std::string>& image_paths, const std::vector<std::vector<int>> tokenlized_text, 
+void process_images(const std::vector<std::string>& image_paths, const std::vector<std::vector<int>> tokenlized_text,
                     const std::vector<std::string>& text_inputs, CLIP& model) {
     // calculate text features
     std::vector<std::vector<float>> text_features;
@@ -30,8 +29,7 @@ void process_images(const std::vector<std::string>& image_paths, const std::vect
         std::vector<float> text_feature = model.encode_text(text);
         text_features.push_back(text_feature);
     }
-
-    std::cout << "\nTotal Similarity per Image:" << std::endl;
+    std::cout << "\nProcessing images:" << std::endl;
     std::vector<std::vector<float>> image_features;
     for (const auto& filename : image_paths) {
         std::cout << "Filename: " << filename << std::endl;
@@ -43,27 +41,45 @@ void process_images(const std::vector<std::string>& image_paths, const std::vect
         std::vector<float> image_input = model.preprocess(image);
         std::vector<float> image_feature = model.encode_image(image_input);
         image_features.push_back(image_feature);
-        // calculate similarity per image
-        std::vector<float> similarity(text_inputs.size());
-        similarity = model.calculate_similarity(image_feature, text_features);
-        int output_size = std::min(text_inputs.size(), static_cast<size_t>(model.top_k));
-        auto [values, indices] = model.topk(similarity, output_size);
-        for (size_t i = 0; i < output_size; ++i) {
-            std::cout << "Text: " << text_inputs[indices[i]] << ", Similarity: " << values[i] << std::endl;
+    }
+    bool no_result = true;
+
+    std::cout << std::fixed << std::setprecision(6);
+    if (text_features.size() > 1) {
+        no_result = false;
+        std::cout << "\nTotal Similarity per Image:" << std::endl;
+        for (size_t i = 0; i < image_features.size(); ++i) {
+            const auto& image_feature = image_features[i];
+            std::cout << "Image: " << image_paths[i] << std::endl;
+            std::vector<float> similarity(text_inputs.size());
+            // calculate similarity per image
+            similarity = model.calculate_similarity(image_feature, text_features);
+            int output_size = std::min(text_inputs.size(), static_cast<size_t>(model.top_k));
+            auto [values, indices] = model.topk(similarity, output_size);
+            for (size_t i = 0; i < output_size; ++i) {
+                std::cout << "Similarity: " << values[i] << ", Text: " << text_inputs[indices[i]] << std::endl;
+            }
         }
     }
-    std::cout << "\nTotal Similarity per Text:" << std::endl;
-    for (size_t i = 0; i < text_features.size(); ++i) {
-        const auto& text_feature = text_features[i];
-        std::cout << "Text: " << text_inputs[i] << std::endl;
-        std::vector<float> similarity(image_features.size());
-        // calculate similarity per text
-        similarity = model.calculate_similarity(text_feature, image_features);
-        int output_size = std::min(image_features.size(), static_cast<size_t>(model.top_k));
-        auto [values, indices] = model.topk(similarity, output_size);
-        for (size_t i = 0; i < output_size; ++i) {
-            std::cout << "Image: " << image_paths[indices[i]] << ", Similarity: " << values[i] << std::endl;
+    if (image_features.size() > 1) {
+        no_result = false;
+        std::cout << "\nTotal Similarity per Text:" << std::endl;
+        for (size_t i = 0; i < text_features.size(); ++i) {
+            const auto& text_feature = text_features[i];
+            std::cout << "Text: " << text_inputs[i] << std::endl;
+            std::vector<float> similarity(image_features.size());
+            // calculate similarity per text
+            similarity = model.calculate_similarity(text_feature, image_features);
+            int output_size = std::min(image_features.size(), static_cast<size_t>(model.top_k));
+            auto [values, indices] = model.topk(similarity, output_size);
+            for (size_t i = 0; i < output_size; ++i) {
+                std::cout << "Similarity: " << values[i] << ", Image: " << image_paths[indices[i]] << std::endl;
+            }
         }
+    }
+    std::cout << std::defaultfloat << std::setprecision(6);
+    if (no_result){
+        std::cout << "\nPlease input multiple images or more texts" << std::endl;
     }
 }
 
@@ -114,6 +130,7 @@ int main(int argc, char *argv[]){
         "{image_model | ../../models/BM1684X/cn_clip_image_vitb16_bm1684x_f16_1b.bmodel | path to the image model file}"
         "{text_model | ../../models/BM1684X/cn_clip_text_vitb16_bm1684x_f16_1b.bmodel | path to the text model file}"
         "{dev_id | 0 | TPU device ids (comma-separated list)}"
+        "{vocab_path | ./tokenizer/vocab.txt | vocab.txt path}"
         "{help | 0 | print help information.}";
     cv::CommandLineParser parser(argc, argv, keys);
     if (parser.get<bool>("help")) {
@@ -132,6 +149,7 @@ int main(int argc, char *argv[]){
     std::string image_model = parser.get<string>("image_model");
     std::string text_model = parser.get<string>("text_model");
     int dev_id = parser.get<int>("dev_id");
+    std::string vocab_path = parser.get<string>("vocab_path");
 
     // check params
     struct stat info;
@@ -154,11 +172,13 @@ int main(int argc, char *argv[]){
     clip.init(image_model, text_model, dev_id);
     printf("==========================\n");
     // tokenizer;
-    BertTokenizer tokenizer;
+    BertTokenizer tokenizer(vocab_path);
     std::vector<std::vector<int>> features_vector;
+    size_t max_token_len = clip.get_max_token_len();
+
     for (const auto& label : text_vector) {
         std::vector<int> text_vec_out; // 存储当前字符串的特征向量
-        get_text_features(tokenizer, label, text_vec_out);
+        get_text_features(tokenizer, label, text_vec_out, max_token_len);
         features_vector.push_back(text_vec_out); // 将特征向量添加到结果向量中
     }
     // predict
@@ -167,14 +187,16 @@ int main(int argc, char *argv[]){
 
     // Logging average times
     size_t image_num = image_paths.size();
+    size_t  text_num = text_vector.size();
+    std::cout << std::endl;
     std::cout << "-------------------Image num " << image_num << ", Preprocess average time ------------------------" << std::endl;
     std::cout << "preprocess(ms): " << (clip.preprocess_time / image_num * 1000) << std::endl;
 
-    std::cout << "------------------ Image num " << image_num << ", Image Encoding average time ----------------------" << std::endl;
+    std::cout << "------------------ Image num " << image_num << ", Image Encoding average time --------------------" << std::endl;
     std::cout << "image_encode(ms): " << (clip.encode_image_time / image_num * 1000) << std::endl;
 
-    std::cout << "------------------ Image num " << image_num << ", Text Encoding average time ----------------------" << std::endl;
-    std::cout << "text_encode(ms): " << (clip.encode_text_time / image_num * 1000) << std::endl;
+    std::cout << "------------------ Text num  " <<  text_num << ", Text Encoding average time ---------------------" << std::endl;
+    std::cout << "text_encode(ms): " << (clip.encode_text_time / text_num * 1000) << std::endl;
 
     std::cout << "All done." << std::endl;
     clip.deinit();

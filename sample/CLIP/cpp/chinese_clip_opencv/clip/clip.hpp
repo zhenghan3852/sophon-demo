@@ -29,7 +29,8 @@ public:
     std::vector<float> calculate_similarity(const std::vector<float>& image_features,
                                         const std::vector<std::vector<float>>& text_features);
     std::pair<std::vector<float>, std::vector<int>> topk(const std::vector<float>& x, int k);
-
+    
+    size_t get_max_token_len() const;
     double encode_image_time;
     double encode_text_time;
     double preprocess_time;
@@ -59,7 +60,6 @@ private:
     bm_net_info_t* text_net;
     std::vector<float> mean;
     std::vector<float> std;
-    std::vector<std::vector<float>> text_projection;
     void *p_bmrt_image;
     void *p_bmrt_text;
     const char **image_name;
